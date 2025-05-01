@@ -1,0 +1,88 @@
+<persistence xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns="http://xmlns.jcp.org/xml/ns/persistence"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
+             http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd"
+             version="2.1">
+
+    <persistence-unit name="testPostgres" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <!-- SQL logging properties -->
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.use_sql_comments" value="true"/>
+
+            <!-- Connection properties using system properties --><!--
+            <property name="hibernate.connection.url" value="jdbc:postgresql://${postgres.host:localhost}:${postgres.port:5432}/${postgres.database:testdb}"/>-->
+            <property name="hibernate.connection.username" value="${postgres.user:test}"/>
+            <property name="hibernate.connection.password" value="${postgres.password:test}"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+
+            <!-- Disable caching for tests -->
+            <property name="hibernate.cache.use_second_level_cache" value="false"/>
+            <property name="hibernate.cache.use_query_cache" value="false"/>
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="testPostgresReactive" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.reactive.provider.ReactivePersistenceProvider</provider>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <!-- SQL logging properties -->
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.use_sql_comments" value="true"/>
+
+            <!-- Connection properties using system properties --><!--
+            <property name="hibernate.connection.url" value="jdbc:postgresql://${postgres.host:localhost}:${postgres.port:5432}/${postgres.database:testdb}"/>-->
+            <property name="hibernate.connection.username" value="${postgres.user:test}"/>
+            <property name="hibernate.connection.password" value="${postgres.password:test}"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+
+            <!-- Reactive specific properties -->
+            <property name="hibernate.reactive" value="true"/>
+
+            <!-- Disable caching for tests -->
+            <property name="hibernate.cache.use_second_level_cache" value="false"/>
+            <property name="hibernate.cache.use_query_cache" value="false"/>
+        </properties>
+    </persistence-unit>
+
+
+    <persistence-unit name="guiceinjectionh2test" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <property name="hibernate.archive.autodetection" value="class"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+            <property name="hibernate.connection.driver_class" value="org.h2.Driver"/>
+            <property name="hibernate.connection.url" value="jdbc:h2:./db/guiceInjectionTestDB"/>
+            <property name="hibernate.connection.user" value="sa"/>
+            <property name="hibernate.flushMode" value="FLUSH_AUTO"/>
+            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+            <property name="show_sql" value="true"/>
+            <property name="format_sql" value="true"/>
+            <property name="use_sql_comments" value="true"/>
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="guiceinjectionh2testJTA" transaction-type="JTA">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <jta-data-source>jdbc/testmoduleJTA</jta-data-source>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <property name="hibernate.archive.autodetection" value="class"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+            <property name="hibernate.connection.driver_class" value="org.h2.Driver"/>
+            <property name="hibernate.connection.url" value="jdbc:h2:./db/guiceInjectionTestDB"/>
+            <property name="hibernate.connection.user" value="sa"/>
+            <property name="hibernate.flushMode" value="FLUSH_AUTO"/>
+            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+            <property name="show_sql" value="true"/>
+            <property name="format_sql" value="true"/>
+            <property name="use_sql_comments" value="true"/>
+        </properties>
+    </persistence-unit>
+
+</persistence>

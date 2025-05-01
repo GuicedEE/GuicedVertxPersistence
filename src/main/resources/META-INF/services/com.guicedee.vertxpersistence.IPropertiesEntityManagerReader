@@ -1,0 +1,2 @@
+com.guicedee.vertxpersistence.implementations.hibernateproperties.HibernateEntityManagerProperties
+com.guicedee.vertxpersistence.implementations.systemproperties.SystemEnvironmentVariablesPropertiesReader

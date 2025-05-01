@@ -1,0 +1,1116 @@
+package com.guicedee.vertxpersistence;
+
+import com.fasterxml.jackson.annotation.*;
+import com.google.common.base.Strings;
+import com.guicedee.client.IGuiceContext;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
+
+import io.vertx.sqlclient.SqlClient;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.ServiceLoader;
+
+import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
+import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
+/**
+ * This class is a basic container for database connection information.
+ * It provides properties for configuring database connections, particularly for Vertx SQL client.
+ * 
+ * <p><strong>Note:</strong> This class contains many legacy properties that are no longer needed for Vertx SQL client.
+ * For new code, consider using {@link CleanConnectionBaseInfo} which provides a cleaner interface
+ * with only the essential properties.</p>
+ * 
+ * @see CleanConnectionBaseInfo
+ */
+@SuppressWarnings({"UnusedReturnValue", "JavaDoc", "unused"})
+@JsonAutoDetect(fieldVisibility = ANY,
+		getterVisibility = NONE,
+		setterVisibility = NONE)
+@JsonInclude(NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@Slf4j
+@ToString
+@EqualsAndHashCode(of = {"persistenceUnitName","driver"})
+public abstract class ConnectionBaseInfo
+{
+	/**
+	 * If this is the connection that must be default bound when no @Named is present
+	 */
+	private boolean defaultConnection = true;
+	/**
+	 * The persistence unit name applied to this cbi
+	 */
+	private String persistenceUnitName;
+	/**
+	 * If this is running in XA mode
+	 */
+	private boolean xa;
+	/**
+	 * If this persistence unit is reactive
+	 */
+	private boolean reactive = true;
+
+	private String url;
+	private String serverName;
+	private String port;
+	private String instanceName;
+	private String driver;
+	private String driverClass;
+	private String className;
+	private String username;
+	@JsonIgnore
+	private String password;
+
+	private String transactionIsolation;
+
+	private String databaseName;
+	private String jndiName;
+	private String jdbcIdentifier;
+
+	private Integer minPoolSize = 1;
+	private Integer maxPoolSize = 5;
+	private Integer maxIdleTime;
+	private Integer maxLifeTime;
+	private Integer preparedStatementCacheSize;
+
+	private Boolean prefill = false;
+	private Boolean useStrictMin = false;
+
+	private Integer acquireIncrement;
+	private Integer acquisitionInterval;
+	private Integer acquisitionTimeout;
+
+	private Boolean allowLocalTransactions;
+	private Boolean applyTransactionTimeout;
+	private Boolean automaticEnlistingEnabled;
+	private Boolean enableJdbc4ConnectionTest;
+	private Boolean ignoreRecoveryFailures;
+	private Boolean shareTransactionConnections;
+
+	private String testQuery;
+
+	private String serverInstanceNameProperty;
+
+	private final Map<String, String> customProperties = new HashMap<>();
+
+	public ConnectionBaseInfo()
+	{
+		serverInstanceNameProperty = "Instance";
+	}
+
+	public ConnectionBaseInfo populateFromProperties(ParsedPersistenceXmlDescriptor unit, Properties filteredProperties)
+	{
+		for (IPropertiesConnectionInfoReader<?> connectionInfoReader : IGuiceContext
+				                                                            .instance()
+				                                                            .getLoader(IPropertiesConnectionInfoReader.class, true, ServiceLoader.load(
+				                                                                       IPropertiesConnectionInfoReader.class)))
+		{
+			connectionInfoReader.populateConnectionBaseInfo(unit, filteredProperties, this);
+		}
+		return this;
+	}
+
+	/**
+	 * Returns the Vertx SqlClient Configured
+	 *
+	 * @return The SqlClient instance
+	 */
+	public abstract SqlClient toPooledDatasource();
+
+	/**
+	 * Gets the transaction isolation
+	 *
+	 * @return
+	 */
+	public String getTransactionIsolation()
+	{
+		return transactionIsolation;
+	}
+
+	/**
+	 * Sets the transaction isolation
+	 *
+	 * @param transactionIsolation
+	 */
+	public ConnectionBaseInfo setTransactionIsolation(String transactionIsolation)
+	{
+		this.transactionIsolation = transactionIsolation;
+		return this;
+	}
+
+	/**
+	 * Gets the minimum pool size
+	 *
+	 * @return
+	 */
+	public Integer getMinPoolSize()
+	{
+		return minPoolSize;
+	}
+
+	/**
+	 * Sets the minimum pool size
+	 *
+	 * @param minPoolSize
+	 *
+	 * @return
+	 */
+	public ConnectionBaseInfo setMinPoolSize(Integer minPoolSize)
+	{
+		this.minPoolSize = minPoolSize;
+		return this;
+	}
+
+	/**
+	 * Sets the maximum pool size
+	 *
+	 * @return
+	 */
+	public Integer getMaxPoolSize()
+	{
+		return maxPoolSize;
+	}
+
+	/**
+	 * Sets the maximum pool size
+	 *
+	 * @param maxPoolSize
+	 *
+	 * @return
+	 */
+	public ConnectionBaseInfo setMaxPoolSize(Integer maxPoolSize)
+	{
+		this.maxPoolSize = maxPoolSize;
+		return this;
+	}
+
+	/**
+	 * When the pool is above the minPoolSize, this parameter controls how long (in seconds) an idle connection will stay in the pool
+	 * before being retired. However, even if a connection is idle for longer than maxIdleTime, the connection will not be retired if it
+	 * would bring the pool below the minPoolSize. Default value: 60.
+	 *
+	 * @return
+	 */
+	public Integer getMaxIdleTime()
+	{
+		return maxIdleTime;
+	}
+
+	/**
+	 * When the pool is above the minPoolSize, this parameter controls how long (in seconds) an idle connection will stay in the pool
+	 * before being retired. However, even if a connection is idle for longer than maxIdleTime, the connection will not be retired if it
+	 * would bring the pool below the minPoolSize. Default value: 60.
+	 *
+	 * @param maxIdleTime
+	 */
+	public ConnectionBaseInfo setMaxIdleTime(Integer maxIdleTime)
+	{
+		this.maxIdleTime = maxIdleTime;
+		return this;
+	}
+
+	/**
+	 * Controls how many Prepared Statements are cached (per connection) by BTM. A value of 0 means that statement caching is disabled.
+	 * Default value: 0.
+	 *
+	 * @return
+	 */
+	public Integer getPreparedStatementCacheSize()
+	{
+		return preparedStatementCacheSize;
+	}
+
+	/**
+	 * Controls how many Prepared Statements are cached (per connection) by BTM. A value of 0 means that statement caching is disabled.
+	 * Default value: 0.
+	 *
+	 * @param preparedStatementCacheSize
+	 */
+	public ConnectionBaseInfo setPreparedStatementCacheSize(Integer preparedStatementCacheSize)
+	{
+		this.preparedStatementCacheSize = preparedStatementCacheSize;
+		return this;
+	}
+
+	/**
+	 * This parameter controls how many connections are filled into the pool when the pool is empty but the maxPoolSize has not been
+	 * reached. If there aren't enough connections in the pool to fulfill a request, new connections will be created, by increments of
+	 * acquireIncrement at a time. Default value: 1.
+	 *
+	 * @return
+	 */
+	public Integer getAcquireIncrement()
+	{
+		return acquireIncrement;
+	}
+
+	/**
+	 * This parameter controls how many connections are filled into the pool when the pool is empty but the maxPoolSize has not been
+	 * reached. If there aren't enough connections in the pool to fulfill a request, new connections will be created, by increments of
+	 * acquireIncrement at a time. Default value: 1.
+	 *
+	 * @param acquireIncrement
+	 *
+	 * @return
+	 */
+	public ConnectionBaseInfo setAcquireIncrement(Integer acquireIncrement)
+	{
+		this.acquireIncrement = acquireIncrement;
+		return this;
+	}
+
+	/**
+	 * This parameter controls how long (in seconds) the pool waits between attempts to create new connections. This time in included
+	 * within in the acquisitionTimeout. Default value: 1.
+	 *
+	 * @return
+	 */
+	public Integer getAcquisitionInterval()
+	{
+		return acquisitionInterval;
+	}
+
+	/**
+	 * This parameter controls how long (in seconds) the pool waits between attempts to create new connections. This time in included
+	 * within in the acquisitionTimeout. Default value: 1.
+	 *
+	 * @param acquisitionInterval
+	 *
+	 * @return
+	 */
+	public ConnectionBaseInfo setAcquisitionInterval(Integer acquisitionInterval)
+	{
+		this.acquisitionInterval = acquisitionInterval;
+		return this;
+	}
+
+	/**
+	 * This parameter controls how long (in seconds) a request for a connection from the pool will block before being aborted (and an
+	 * exception thrown). Default value: 30.
+	 *
+	 * @return
+	 */
+	public Integer getAcquisitionTimeout()
+	{
+		return acquisitionTimeout;
+	}
+
+	/**
+	 * This parameter controls how long (in seconds) a request for a connection from the pool will block before being aborted (and an
+	 * exception thrown). Default value: 30.
+	 *
+	 * @param acquisitionTimeout
+	 *
+	 * @return
+	 */
+	public ConnectionBaseInfo setAcquisitionTimeout(Integer acquisitionTimeout)
+	{
+		this.acquisitionTimeout = acquisitionTimeout;
+		return this;
+	}
+
+	/**
+	 * This parameter is used to adjust whether or not you want to be able to run SQL statements outside of XA transactions scope.
+	 * Defaults value: false.
+	 *
+	 * @return
+	 */
+	public Boolean getAllowLocalTransactions()
+	{
+		return allowLocalTransactions;
+	}
+
+	/**
+	 * This parameter is used to adjust whether or not you want to be able to run SQL statements outside of XA transactions scope.
+	 * Defaults value: false.
+	 *
+	 * @param allowLocalTransactions
+	 *
+	 * @return
+	 */
+	public ConnectionBaseInfo setAllowLocalTransactions(Boolean allowLocalTransactions)
+	{
+		this.allowLocalTransactions = allowLocalTransactions;
+		return this;
+	}
+
+	/**
+	 * Should the transaction timeout be passed to the resource via XAResource.setTransactionTimeout()? Default value: false.
+	 *
+	 * @return
+	 */
+	public Boolean getApplyTransactionTimeout()
+	{
+		return applyTransactionTimeout;
+	}
+
+	/**
+	 * Should the transaction timeout be passed to the resource via XAResource.setTransactionTimeout()? Default value: false.
+	 *
+	 * @param applyTransactionTimeout
+	 *
+	 * @return
+	 */
+	public ConnectionBaseInfo setApplyTransactionTimeout(Boolean applyTransactionTimeout)
+	{
+		this.applyTransactionTimeout = applyTransactionTimeout;
+		return this;
+	}
+
+	/**
+	 * This parameter controls whether connections from the PoolingDataSource are automatically enlisted/delisted into the XA transactions
+	 * . If this is set to false then have to enlist XAResource objects manually into the Transaction objects for them to participate in
+	 * XA transactions. Default value: true.
+	 *
+	 * @return
+	 */
+	public Boolean getAutomaticEnlistingEnabled()
+	{
+		return automaticEnlistingEnabled;
+	}
+
+	/**
+	 * This parameter controls whether connections from the PoolingDataSource are automatically enlisted/delisted into the XA transactions
+	 * . If this is set to false then have to enlist XAResource objects manually into the Transaction objects for them to participate in
+	 * XA transactions. Default value: true.
+	 *
+	 * @param automaticEnlistingEnabled
+	 *
+	 * @return
+	 */
+	public ConnectionBaseInfo setAutomaticEnlistingEnabled(Boolean automaticEnlistingEnabled)
+	{
+		this.automaticEnlistingEnabled = automaticEnlistingEnabled;
+		return this;
+	}
+
+	/**
+	 * If your JDBC driver supports JDBC4, this method of testing the connection is likely much more efficient than using the testQuery
+	 * parameter. In the case of a testQuery, the query must be sent to the DB server, parsed, and executed before the connection can be
+	 * used. JDBC4 exposes a method by which a driver can make its own determination of connectivity (possibly whether the socket is still
+	 * connected, etc.). Default value: false.
+	 *
+	 * @return
+	 */
+	public Boolean getEnableJdbc4ConnectionTest()
+	{
+		return enableJdbc4ConnectionTest;
+	}
+
+	/**
+	 * If your JDBC driver supports JDBC4, this method of testing the connection is likely much more efficient than using the testQuery
+	 * parameter. In the case of a testQuery, the query must be sent to the DB server, parsed, and executed before the connection can be
+	 * used. JDBC4 exposes a method by which a driver can make its own determination of connectivity (possibly whether the socket is still
+	 * connected, etc.). Default value: false.
+	 *
+	 * @param enableJdbc4ConnectionTest
+	 *
+	 * @return
+	 */
+	public ConnectionBaseInfo setEnableJdbc4ConnectionTest(Boolean enableJdbc4ConnectionTest)
+	{
+		this.enableJdbc4ConnectionTest = enableJdbc4ConnectionTest;
+		return this;
+	}
+
+	/**
+	 * Should recovery errors be ignored? Ignoring recovery errors jeopardizes the failed transactions atomicity so only set this
+	 * parameter to true when you know what you're doing. This is mostly useful in a development environment. Default value: false.
+	 *
+	 * @return
+	 */
+	public Boolean getIgnoreRecoveryFailures()
+	{
+		return ignoreRecoveryFailures;
+	}
+
+	/**
+	 * Should recovery errors be ignored? Ignoring recovery errors jeopardizes the failed transactions atomicity so only set this
+	 * parameter to true when you know what you're doing. This is mostly useful in a development environment. Default value: false.
+	 *
+	 * @param ignoreRecoveryFailures
+	 *
+	 * @return
+	 */
+	public ConnectionBaseInfo setIgnoreRecoveryFailures(Boolean ignoreRecoveryFailures)
+	{
+		this.ignoreRecoveryFailures = ignoreRecoveryFailures;
+		return this;
+	}
+
+	/**
+	 * By default, whenever a thread requests a connection from the DataSource, BTM will issue a new connection. All connections issued
+	 * are bound into the same transaction context. Depending on the design of the user's application, this behavior can result in a large
+	 * number of connections to the database -- and in the case of a database such as PostgreSQL, which uses one process per-connection
+	 * this places a fairly heavy burden on the database. Setting this option to true will enable a thread-associated connection cache.
+	 * With this option enabled, no matter how many times a thread requests a connection from the DataSource, BTM will return a single
+	 * connection. Because connections can be shared within the context of a transaction, this provides a more efficient use of connection
+	 * resources. A positive benefit of a single connection per thread is that the prepared statement cache (which is per-connection) is
+	 * also made more efficient. Lastly, another benefit is that because connections are shared within the same thread, the overhead of
+	 * establishing and testing a new connection to the database is avoided, which significantly improves the performance of some access
+	 * patterns. Of course, BTM will still ensure correctness whenever this parameter is set to true. While the default value of this
+	 * property is false for backward compatibility, the recommended setting is true. Default value: false.
+	 *
+	 * @return
+	 */
+	public Boolean getShareTransactionConnections()
+	{
+		return shareTransactionConnections;
+	}
+
+	/**
+	 * By default, whenever a thread requests a connection from the DataSource, BTM will issue a new connection. All connections issued
+	 * are bound into the same transaction context. Depending on the design of the user's application, this behavior can result in a large
+	 * number of connections to the database -- and in the case of a database such as PostgreSQL, which uses one process per-connection
+	 * this places a fairly heavy burden on the database. Setting this option to true will enable a thread-associated connection cache.
+	 * With this option enabled, no matter how many times a thread requests a connection from the DataSource, BTM will return a single
+	 * connection. Because connections can be shared within the context of a transaction, this provides a more efficient use of connection
+	 * resources. A positive benefit of a single connection per thread is that the prepared statement cache (which is per-connection) is
+	 * also made more efficient. Lastly, another benefit is that because connections are shared within the same thread, the overhead of
+	 * establishing and testing a new connection to the database is avoided, which significantly improves the performance of some access
+	 * patterns. Of course, BTM will still ensure correctness whenever this parameter is set to true. While the default value of this
+	 * property is false for backward compatibility, the recommended setting is true. Default value: false.
+	 *
+	 * @param shareTransactionConnections
+	 *
+	 * @return
+	 */
+	public ConnectionBaseInfo setShareTransactionConnections(Boolean shareTransactionConnections)
+	{
+		this.shareTransactionConnections = shareTransactionConnections;
+		return this;
+	}
+
+	/**
+	 * This parameters sets the SQL statement that is used to test whether a connection is still alive before returning it from the
+	 * connection pool.
+	 *
+	 * @return
+	 */
+	public String getTestQuery()
+	{
+		return testQuery;
+	}
+
+	/**
+	 * This parameters sets the SQL statement that is used to test whether a connection is still alive before returning it from the
+	 * connection pool.
+	 *
+	 * @param testQuery
+	 *
+	 * @return
+	 */
+	public ConnectionBaseInfo setTestQuery(String testQuery)
+	{
+		this.testQuery = testQuery;
+		return this;
+	}
+
+	/**
+	 * Gets the jndi name
+	 *
+	 * @return
+	 */
+	public String getJndiName()
+	{
+		return jndiName;
+	}
+
+	/**
+	 * Sets the jndi name
+	 *
+	 * @param jndiName
+	 */
+	public ConnectionBaseInfo setJndiName(String jndiName)
+	{
+		this.jndiName = jndiName;
+		return this;
+	}
+
+	/**
+	 * Gets a driver class
+	 *
+	 * @return
+	 */
+	public String getDriverClass()
+	{
+		return driverClass;
+	}
+
+	/**
+	 * Sets a driver class
+	 *
+	 * @param driverClass
+	 */
+	public ConnectionBaseInfo setDriverClass(String driverClass)
+	{
+		this.driverClass = driverClass;
+		return this;
+	}
+
+	/**
+	 * If the connection is an XA resource
+	 *
+	 * @return
+	 */
+	public boolean isXa()
+	{
+		return xa;
+	}
+
+	/**
+	 * If the connection ins an XA Resource
+	 *
+	 * @param xa
+	 */
+	public ConnectionBaseInfo setXa(boolean xa)
+	{
+		this.xa = xa;
+		return this;
+	}
+
+	/**
+	 * Returns a provided URL
+	 *
+	 * @return
+	 */
+	public String getUrl()
+	{
+		return url;
+	}
+
+	/**
+	 * Sets a provided URL
+	 *
+	 * @param url
+	 */
+	public ConnectionBaseInfo setUrl(String url)
+	{
+		this.url = url;
+		return this;
+	}
+
+	/**
+	 * Returns the server name
+	 *
+	 * @return
+	 */
+	public String getServerName()
+	{
+		return serverName;
+	}
+
+	/**
+	 * Sets the server name
+	 *
+	 * @param serverName
+	 */
+	public ConnectionBaseInfo setServerName(String serverName)
+	{
+		this.serverName = serverName;
+		return this;
+	}
+
+	/**
+	 * Returns the port
+	 *
+	 * @return
+	 */
+	public String getPort()
+	{
+		return port;
+	}
+
+	/**
+	 * Sets the port
+	 *
+	 * @param port
+	 */
+	public ConnectionBaseInfo setPort(String port)
+	{
+		this.port = port;
+		return this;
+	}
+
+	/**
+	 * Gets the instance name
+	 *
+	 * @return
+	 */
+	public String getInstanceName()
+	{
+		return instanceName;
+	}
+
+	/**
+	 * Sets the instance name
+	 *
+	 * @param instanceName
+	 */
+	public ConnectionBaseInfo setInstanceName(String instanceName)
+	{
+		this.instanceName = instanceName;
+		return this;
+	}
+
+	/**
+	 * Gets a driver
+	 *
+	 * @return
+	 */
+	public String getDriver()
+	{
+		return driver;
+	}
+
+	/**
+	 * Sets a driver
+	 *
+	 * @param driver
+	 */
+	public ConnectionBaseInfo setDriver(String driver)
+	{
+		this.driver = driver;
+		return this;
+	}
+
+	/**
+	 * Gets a username
+	 *
+	 * @return
+	 */
+	public String getUsername()
+	{
+		return username;
+	}
+
+	/**
+	 * Sets a user name
+	 *
+	 * @param username
+	 */
+	public ConnectionBaseInfo setUsername(String username)
+	{
+		if (Strings.isNullOrEmpty(username))
+		{
+			username = null;
+		}
+		this.username = username;
+		return this;
+	}
+
+	/**
+	 * Gets a password
+	 *
+	 * @return
+	 */
+	public String getPassword()
+	{
+		return password;
+	}
+
+	/**
+	 * Sets a password
+	 *
+	 * @param password
+	 */
+	public ConnectionBaseInfo setPassword(String password)
+	{
+		if (Strings.isNullOrEmpty(password))
+		{
+			password = null;
+		}
+		this.password = password;
+		return this;
+	}
+
+	/**
+	 * Gets the database name
+	 *
+	 * @return
+	 */
+	public String getDatabaseName()
+	{
+		return databaseName;
+	}
+
+	/**
+	 * Sets the database name
+	 *
+	 * @param databaseName
+	 */
+	public ConnectionBaseInfo setDatabaseName(String databaseName)
+	{
+		this.databaseName = databaseName;
+		return this;
+	}
+
+	/**
+	 * Gets the jdbc private identifier
+	 *
+	 * @return
+	 */
+	public String getJdbcIdentifier()
+	{
+		return jdbcIdentifier;
+	}
+
+	/**
+	 * Sets the jdbc private identifier
+	 *
+	 * @param jdbcIdentifier
+	 *
+	 * @return
+	 */
+	public ConnectionBaseInfo setJdbcIdentifier(String jdbcIdentifier)
+	{
+		this.jdbcIdentifier = jdbcIdentifier;
+		return this;
+	}
+
+	/**
+	 * Gets the service instance name property to use
+	 *
+	 * @return
+	 */
+	public String getServerInstanceNameProperty()
+	{
+		return serverInstanceNameProperty;
+	}
+
+	/**
+	 * Sets the instance property name to use to specify the instance
+	 *
+	 * @param serverInstanceNameProperty
+	 *
+	 * @return
+	 */
+	public ConnectionBaseInfo setServerInstanceNameProperty(String serverInstanceNameProperty)
+	{
+		this.serverInstanceNameProperty = serverInstanceNameProperty;
+		return this;
+	}
+
+	/**
+	 * Sets the prefill
+	 *
+	 * @return
+	 */
+	public Boolean getPrefill()
+	{
+		return prefill;
+	}
+
+	/**
+	 * If the connection pool must prefil
+	 *
+	 * @param prefill
+	 *
+	 * @return
+	 */
+	public ConnectionBaseInfo setPrefill(Boolean prefill)
+	{
+		this.prefill = prefill;
+		return this;
+	}
+
+	/**
+	 * If the minimum number of connections is strictly defined
+	 *
+	 * @return
+	 */
+	public Boolean getUseStrictMin()
+	{
+		return useStrictMin;
+	}
+
+	/**
+	 * Sets to use strict minimum connections
+	 *
+	 * @param useStrictMin
+	 *
+	 * @return
+	 */
+	public ConnectionBaseInfo setUseStrictMin(Boolean useStrictMin)
+	{
+		this.useStrictMin = useStrictMin;
+		return this;
+	}
+
+	/**
+	 * This parameter controls how long (in seconds) a connection is allowed to live in the pool regardless of the minPoolSize parameter
+	 * value. If a connection exceeds this time, and it is not in use, it will be retired from the pool. If the retirement of a connection
+	 * causes the pool to dip below the minPoolSize, it will be immediately replaced with a new connection. This setting can be used to
+	 * avoid unexpected disconnect due to database-side connection timeout. It is also useful to avoid leaks and release resources held on
+	 * the database-side for open connections. Default value: 0.
+	 *
+	 * @return
+	 */
+	public Integer getMaxLifeTime()
+	{
+		return maxLifeTime;
+	}
+
+	/**
+	 * This parameter controls how long (in seconds) a connection is allowed to live in the pool regardless of the minPoolSize parameter
+	 * value. If a connection exceeds this time, and it is not in use, it will be retired from the pool. If the retirement of a connection
+	 * causes the pool to dip below the minPoolSize, it will be immediately replaced with a new connection. This setting can be used to
+	 * avoid unexpected disconnect due to database-side connection timeout. It is also useful to avoid leaks and release resources held on
+	 * the database-side for open connections. Default value: 0.
+	 *
+	 * @param maxLifeTime
+	 *
+	 * @return
+	 */
+	public ConnectionBaseInfo setMaxLifeTime(Integer maxLifeTime)
+	{
+		this.maxLifeTime = maxLifeTime;
+		return this;
+	}
+
+	public String getPersistenceUnitName()
+	{
+		return persistenceUnitName;
+	}
+
+	public ConnectionBaseInfo setPersistenceUnitName(String persistenceUnitName)
+	{
+		this.persistenceUnitName = persistenceUnitName;
+		return this;
+	}
+
+	public Map<String, String> getCustomProperties()
+	{
+		return customProperties;
+	}
+
+	@JsonProperty("password")
+	private String passwordProperty()
+	{
+		return password == null ? "Empty" : "*********";
+	}
+
+	/**
+	 * The datasource class name of the driver to use
+	 * @return
+	 */
+	public String getClassName()
+	{
+		return className;
+	}
+
+	/**
+	 * The datasource of the driver to use
+	 * @param className
+	 * @return
+	 */
+	public ConnectionBaseInfo setClassName(String className)
+	{
+		this.className = className;
+		return this;
+	}
+
+	/**
+	 * If this is the connection that must be default bound when no @Named is present
+	 * @return
+	 */
+	public boolean isDefaultConnection()
+	{
+		return defaultConnection;
+	}
+
+	/**
+	 * If this is the connection that must be default bound when no @Named is present
+	 * @param defaultConnection
+	 * @return
+	 */
+	public ConnectionBaseInfo setDefaultConnection(boolean defaultConnection)
+	{
+		this.defaultConnection = defaultConnection;
+		return this;
+	}
+
+	public boolean isReactive()
+	{
+		return reactive;
+	}
+
+	public ConnectionBaseInfo setReactive(boolean reactive)
+	{
+		this.reactive = reactive;
+		return this;
+	}
+
+	/**
+	 * Generates a JDBC URL based on the connection properties.
+	 * Different database types have different URL formats.
+	 *
+	 * @return The JDBC URL as a string
+	 */
+	public String getJdbcUrl() {
+		// If a URL is already set, return it
+		if (url != null && !url.isEmpty()) {
+			return url;
+		}
+
+		// Build URL based on driver type
+		StringBuilder jdbcUrl = new StringBuilder("jdbc:");
+
+		if (driver == null) {
+			throw new IllegalStateException("Driver must be set to generate a JDBC URL");
+		}
+
+		switch (driver.toLowerCase()) {
+			case "postgresql":
+				jdbcUrl.append("postgresql://");
+				appendHostPortDatabase(jdbcUrl);
+				break;
+
+			case "mysql":
+				jdbcUrl.append("mysql://");
+				appendHostPortDatabase(jdbcUrl);
+				break;
+
+			case "oracle":
+				jdbcUrl.append("oracle:thin:@");
+				// Oracle can use either SID or Service Name format
+				if (getCustomProperties().containsKey("useServiceName") && 
+					Boolean.parseBoolean(getCustomProperties().get("useServiceName"))) {
+					jdbcUrl.append("//");
+					appendHostPortDatabase(jdbcUrl);
+				} else {
+					// SID format
+					if (serverName != null) {
+						jdbcUrl.append(serverName);
+					} else {
+						jdbcUrl.append("localhost");
+					}
+
+					if (port != null) {
+						jdbcUrl.append(":").append(port);
+					} else {
+						jdbcUrl.append(":1521");
+					}
+
+					if (databaseName != null) {
+						jdbcUrl.append(":").append(databaseName);
+					}
+				}
+				break;
+
+			case "sqlserver":
+				jdbcUrl.append("sqlserver://");
+				if (serverName != null) {
+					jdbcUrl.append(serverName);
+				} else {
+					jdbcUrl.append("localhost");
+				}
+
+				if (port != null) {
+					jdbcUrl.append(":").append(port);
+				}
+
+				if (databaseName != null) {
+					jdbcUrl.append(";databaseName=").append(databaseName);
+				}
+
+				if (instanceName != null) {
+					jdbcUrl.append(";instanceName=").append(instanceName);
+				}
+				break;
+
+			case "db2":
+				jdbcUrl.append("db2://");
+				appendHostPortDatabase(jdbcUrl);
+				break;
+
+			default:
+				// Generic format for other drivers
+				jdbcUrl.append(driver).append("://");
+				appendHostPortDatabase(jdbcUrl);
+				break;
+		}
+
+		// Add any additional parameters from custom properties
+		boolean firstParam = true;
+		for (Map.Entry<String, String> entry : customProperties.entrySet()) {
+			String key = entry.getKey();
+			String value = entry.getValue();
+
+			// Skip properties that shouldn't be in the URL
+			if (key.startsWith("hibernate.") || key.startsWith("jakarta.") || 
+				key.startsWith("javax.") || key.equals("useServiceName")) {
+				continue;
+			}
+
+			// Add parameter separator
+			if (firstParam) {
+				// For most databases, parameters start with ?
+				// For SQL Server, we already have ; as separator
+				if (!driver.equalsIgnoreCase("sqlserver")) {
+					jdbcUrl.append("?");
+				} else {
+					jdbcUrl.append(";");
+				}
+				firstParam = false;
+			} else {
+				// For most databases, parameters are separated with &
+				// For SQL Server, parameters are separated with ;
+				if (!driver.equalsIgnoreCase("sqlserver")) {
+					jdbcUrl.append("&");
+				} else {
+					jdbcUrl.append(";");
+				}
+			}
+
+			jdbcUrl.append(key).append("=").append(value);
+		}
+
+		return jdbcUrl.toString();
+	}
+
+	/**
+	 * Helper method to append host, port, and database to a JDBC URL
+	 * 
+	 * @param jdbcUrl The StringBuilder containing the JDBC URL being built
+	 */
+	private void appendHostPortDatabase(StringBuilder jdbcUrl) {
+		if (serverName != null) {
+			jdbcUrl.append(serverName);
+		} else {
+			jdbcUrl.append("localhost");
+		}
+
+		if (port != null) {
+			jdbcUrl.append(":").append(port);
+		} else {
+			// Add default port based on driver type
+			if (driver != null) {
+				switch (driver.toLowerCase()) {
+					case "postgresql":
+						jdbcUrl.append(":5432");
+						break;
+					case "mysql":
+						jdbcUrl.append(":3306");
+						break;
+					case "db2":
+						jdbcUrl.append(":50000");
+						break;
+					default:
+						// No default port for unknown drivers
+						break;
+				}
+			}
+		}
+
+		if (databaseName != null) {
+			jdbcUrl.append("/").append(databaseName);
+		}
+	}
+}
