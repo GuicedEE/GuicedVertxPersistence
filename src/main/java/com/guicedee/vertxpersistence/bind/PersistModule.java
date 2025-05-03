@@ -40,7 +40,7 @@ public abstract class PersistModule extends AbstractModule
     @Override
     protected final void configure()
     {
-
+        super.configure();
         configurePersistence();
 
         requireBinding(PersistService.class);

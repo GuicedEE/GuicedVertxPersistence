@@ -48,6 +48,7 @@ public class TestModulePostgres extends DatabaseModule<TestModulePostgres>
         connectionInfo.setUsername(POSTGRES_USER);
         connectionInfo.setPassword(POSTGRES_PASSWORD);
         connectionInfo.setDefaultConnection(true);
+        connectionInfo.setReactive(false);
         return connectionInfo;
     }
 

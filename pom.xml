@@ -29,19 +29,23 @@
             <artifactId>scram</artifactId>
         </dependency>
 
-
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-pg-client</artifactId>
         </dependency>
-<!--
 
         <dependency>
+            <groupId>com.guicedee.microprofile</groupId>
+            <artifactId>guiced-microprofile-config</artifactId>
+        </dependency>
+
+<!--        <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-mssql-client</artifactId>
         </dependency>
@@ -49,10 +53,7 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-mysql-client</artifactId>
-        </dependency>
-
--->
-
+        </dependency>-->
 
         <dependency>
             <groupId>com.guicedee</groupId>
@@ -82,11 +83,6 @@
         <dependency>
             <groupId>com.guicedee.services</groupId>
             <artifactId>hibernate-reactive</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.guicedee.services</groupId>
-            <artifactId>guice-persist</artifactId>
         </dependency>
 
         <dependency>
@@ -127,18 +123,9 @@
         <dependency>
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>
-            <scope>compile</scope>
-            <version>5.11.4</version>
+            <scope>test</scope>
             <optional>true</optional>
         </dependency>
-
-<!--
-
-        <dependency>
-            <groupId>com.guicedee.services</groupId>
-            <artifactId>postgresql</artifactId>
-        </dependency>
--->
 
         <dependency>
             <groupId>com.guicedee.services</groupId>
@@ -155,6 +142,12 @@
             <groupId>jakarta.transaction</groupId>
             <artifactId>jakarta.transaction-api</artifactId>
             <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>com.guicedee.services</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>

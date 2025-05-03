@@ -13,6 +13,8 @@ import lombok.Setter;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.hibernate.reactive.session.impl.ReactiveSessionFactoryImpl;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +30,7 @@ import static com.guicedee.vertxpersistence.bind.JtaPersistService.ENTITY_MANAGE
  * When the connection is reactive, this will use Hibernate Reactive's Mutiny.Session instead of a standard EntityManager.
  * The Mutiny.Session is obtained from the Mutiny.SessionFactory which is the hibernate vertx reactive implementation.
  */
-@CallScope
+//@CallScope
 public class JtaUnitOfWork implements UnitOfWork
 {
     private static final Map<EntityManager, Mutiny.SessionFactory> entityManagerSessionFactoryMap = new HashMap<>();
@@ -106,7 +108,7 @@ public class JtaUnitOfWork implements UnitOfWork
             // For reactive connections, use Mutiny.Session
             var session = sessionFactory.openSession();
             csp.getProperties().put(ENTITY_MANAGER_KEY, session);
-            session.await().indefinitely();
+            session.await().atMost(Duration.of(1, ChronoUnit.MINUTES));
         } else if (emFactory != null) {
             // For non-reactive connections, use standard EntityManager
             var em = emFactory.createEntityManager();
@@ -129,8 +131,8 @@ public class JtaUnitOfWork implements UnitOfWork
 
         try
         {
-            if (reactive && em instanceof Mutiny.Session) {
-                ((Mutiny.Session) em).close();
+            if (reactive && em instanceof Mutiny.Session ems) {
+                ems.close();
             } else if (em instanceof jakarta.persistence.EntityManager) {
                 ((jakarta.persistence.EntityManager) em).close();
             }

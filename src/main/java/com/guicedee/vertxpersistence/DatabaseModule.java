@@ -1,5 +1,6 @@
 package com.guicedee.vertxpersistence;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.PrivateModule;
 import com.guicedee.client.IGuiceContext;
 import com.guicedee.guicedinjection.interfaces.IGuiceModule;
@@ -25,7 +26,7 @@ import java.util.logging.Level;
 @Slf4j
 @EntityManager
 public abstract class DatabaseModule<J extends DatabaseModule<J>>
-        extends PrivateModule
+        extends AbstractModule
         implements IGuiceModule<J>
 {
 
@@ -87,7 +88,7 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
             {
                 JtaPersistModule jpaModule = new JtaPersistModule(getPersistenceUnitName(), connectionBaseInfo, emAnnos[0]);
                 jpaModule.properties(jdbcProperties);
-
+                install(jpaModule);
                 VertxPersistenceModule.getConnectionModules().put(connectionBaseInfo, jpaModule);
             }
             else

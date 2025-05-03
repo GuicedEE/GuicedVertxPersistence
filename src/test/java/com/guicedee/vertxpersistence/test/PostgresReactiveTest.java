@@ -1,6 +1,7 @@
 package com.guicedee.vertxpersistence.test;
 
 import com.google.inject.Key;
+import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.persist.PersistService;
 import com.google.inject.persist.Transactional;
@@ -12,16 +13,12 @@ import com.guicedee.vertxpersistence.ConnectionBaseInfo;
 import com.guicedee.vertxpersistence.bind.JtaUnitOfWork;
 import com.guicedee.vertxpersistence.implementations.VertxPersistenceModule;
 import io.vertx.core.Future;
-import io.vertx.sqlclient.SqlClient;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import static com.guicedee.vertxpersistence.test.PostgresTest.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -179,6 +176,7 @@ public class PostgresReactiveTest {
                 // But we can verify that the transaction completed by checking the result
             } catch (Exception e) {
                 fail("Transaction should not throw an exception: " + e.getMessage());
+                e.printStackTrace();
             }
         } finally {
             // Exit the scope
@@ -196,7 +194,7 @@ public class PostgresReactiveTest {
          * This tests the reactive transaction handling.
          */
         @Transactional
-        @jakarta.inject.Named("testPostgresReactive")
+        @Named("testPostgresReactive")
         public Future<String> doSomethingTransactionalReactive() {
             // Verify that we're in a transaction by checking if we can get a Mutiny.Session
             // We can't directly access JtaPersistService.ENTITY_MANAGER_KEY because it's not public
