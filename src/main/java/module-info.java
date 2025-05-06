@@ -1,6 +1,7 @@
 import com.guicedee.guicedinjection.interfaces.IGuiceConfigurator;
 import com.guicedee.vertxpersistence.IPropertiesConnectionInfoReader;
 import com.guicedee.vertxpersistence.IPropertiesEntityManagerReader;
+import com.guicedee.vertxpersistence.bind.RestServiceInterceptor;
 import com.guicedee.vertxpersistence.implementations.GuicedConfigurator;
 import com.guicedee.vertxpersistence.implementations.hibernateproperties.HibernateEntityManagerProperties;
 import com.guicedee.vertxpersistence.implementations.systemproperties.SystemEnvironmentVariablesPropertiesReader;
@@ -22,13 +23,14 @@ module com.guicedee.vertxpersistence {
     exports com.google.inject.persist;
 
     requires transitive org.hibernate.reactive;
+    requires static com.guicedee.rest;
 
     requires com.guicedee.vertx;
 
     requires org.slf4j;
 
     requires static lombok;
-    requires static jakarta.transaction;
+    requires transitive jakarta.transaction;
 
     requires transitive org.hibernate.orm.core;
     requires transitive io.vertx.sql.client;
@@ -37,13 +39,15 @@ module com.guicedee.vertxpersistence {
 
     requires transitive io.smallrye.mutiny;
 
-    requires com.ongres.scram.client;
+    requires transitive com.ongres.scram.client;
 
 
     requires static io.vertx.sql.client.pg;
 
     uses com.guicedee.vertxpersistence.IPropertiesConnectionInfoReader;
     uses com.guicedee.vertxpersistence.IPropertiesEntityManagerReader;
+
+    provides com.guicedee.guicedservlets.rest.services.RestInterceptor with RestServiceInterceptor;
 
     provides IGuiceConfigurator with GuicedConfigurator;
     provides IPropertiesEntityManagerReader with SystemEnvironmentVariablesPropertiesReader, HibernateEntityManagerProperties;

@@ -8,7 +8,7 @@ import com.google.inject.persist.Transactional;
 import com.google.inject.persist.UnitOfWork;
 import com.guicedee.client.CallScoper;
 import com.guicedee.client.IGuiceContext;
-import com.guicedee.guicedservlets.websockets.options.CallScopeProperties;
+import com.guicedee.client.CallScopeProperties;
 import com.guicedee.vertxpersistence.ConnectionBaseInfo;
 import com.guicedee.vertxpersistence.bind.JtaUnitOfWork;
 import com.guicedee.vertxpersistence.implementations.VertxPersistenceModule;
@@ -105,9 +105,6 @@ public class PostgresReactiveTest {
 
                 // Verify that the connection is reactive
                 assertTrue(connectionInfo.isReactive(), "ConnectionBaseInfo should be reactive");
-
-
-
 
 
                 // Get the SqlClient for the PostgreSQL persistence unit

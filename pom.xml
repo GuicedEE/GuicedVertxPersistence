@@ -91,6 +91,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.guicedee</groupId>
+            <artifactId>guiced-rest-services</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>test</scope>
@@ -141,7 +147,6 @@
         <dependency>
             <groupId>jakarta.transaction</groupId>
             <artifactId>jakarta.transaction-api</artifactId>
-            <optional>true</optional>
         </dependency>
 
         <dependency>

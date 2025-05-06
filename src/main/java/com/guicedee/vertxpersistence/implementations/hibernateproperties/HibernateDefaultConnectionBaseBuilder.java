@@ -1,6 +1,7 @@
 package com.guicedee.vertxpersistence.implementations.hibernateproperties;
 
 
+import com.google.common.base.Strings;
 import com.guicedee.vertxpersistence.ConnectionBaseInfo;
 import com.guicedee.vertxpersistence.IPropertiesConnectionInfoReader;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
@@ -77,6 +78,16 @@ public class HibernateDefaultConnectionBaseBuilder
                     break;
                 }
             }
+        }
+
+        //process into properties
+        if (!Strings.isNullOrEmpty(cbi.getUsername()))
+        {
+            filteredProperties.put("jakarta.persistence.jdbc.user", cbi.getUsername());
+        }
+        if(!Strings.isNullOrEmpty(cbi.getPassword()))
+        {
+            filteredProperties.put("jakarta.persistence.jdbc.password", cbi.getPassword());
         }
         return cbi;
     }

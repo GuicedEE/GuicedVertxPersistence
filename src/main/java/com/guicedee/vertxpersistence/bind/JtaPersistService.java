@@ -23,7 +23,7 @@ import com.google.inject.persist.PersistService;
 import com.google.inject.persist.UnitOfWork;
 import com.guicedee.client.IGuiceContext;
 import com.guicedee.guicedservlets.servlets.services.scopes.CallScope;
-import com.guicedee.guicedservlets.websockets.options.CallScopeProperties;
+import com.guicedee.client.CallScopeProperties;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
@@ -46,7 +46,7 @@ public class JtaPersistService implements Provider<EntityManager>, UnitOfWork, P
     private boolean isReactive;
 
     // Entity manager key for CallScopeProperties
-    static final String ENTITY_MANAGER_KEY = "entityManager";
+    public static final String ENTITY_MANAGER_KEY = "entityManager";
 
     public JtaPersistService(
             JtaPersistOptions options,

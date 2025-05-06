@@ -5,8 +5,9 @@ import com.google.inject.Singleton;
 import com.google.inject.persist.UnitOfWork;
 import com.guicedee.client.IGuiceContext;
 import com.guicedee.guicedservlets.servlets.services.scopes.CallScope;
-import com.guicedee.guicedservlets.websockets.options.CallScopeProperties;
+import com.guicedee.client.CallScopeProperties;
 import com.guicedee.vertxpersistence.annotations.EntityManager;
+import io.smallrye.mutiny.Uni;
 import jakarta.persistence.EntityManagerFactory;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,6 +41,8 @@ public class JtaUnitOfWork implements UnitOfWork
     private final boolean reactive;
 
     private volatile EntityManagerFactory emFactory;
+    @Getter
+    private Uni<Mutiny.Session> session;
     @Getter
     private volatile Mutiny.SessionFactory sessionFactory;
     private JtaPersistService persistService;
@@ -106,40 +109,80 @@ public class JtaUnitOfWork implements UnitOfWork
 
         if (reactive && sessionFactory != null) {
             // For reactive connections, use Mutiny.Session
-            var session = sessionFactory.openSession();
+            session = sessionFactory.openSession();
             csp.getProperties().put(ENTITY_MANAGER_KEY, session);
-            session.await().atMost(Duration.of(1, ChronoUnit.MINUTES));
+            //session.await().atMost(Duration.of(1, ChronoUnit.MINUTES));
         } else if (emFactory != null) {
             // For non-reactive connections, use standard EntityManager
             var em = emFactory.createEntityManager();
             csp.getProperties().put(ENTITY_MANAGER_KEY, em);
+        } else if (persistService != null) {
+            // Start the persist service if it's not already started
+            persistService.start();
+
+            // Try to get the EntityManagerFactory again
+            try {
+                java.lang.reflect.Field field = JtaPersistService.class.getDeclaredField("emFactory");
+                field.setAccessible(true);
+                EntityManagerFactory factory = (EntityManagerFactory) field.get(persistService);
+                if (factory != null) {
+                    setEntityManagerFactory(factory);
+
+                    // Now try again with the EntityManagerFactory
+                    if (reactive && sessionFactory != null) {
+                        // For reactive connections, use Mutiny.Session
+                        session = sessionFactory.openSession();
+                        csp.getProperties().put(ENTITY_MANAGER_KEY, session);
+                        session.await().atMost(Duration.of(1, ChronoUnit.MINUTES));
+                    } else if (emFactory != null) {
+                        // For non-reactive connections, use standard EntityManager
+                        var em = emFactory.createEntityManager();
+                        csp.getProperties().put(ENTITY_MANAGER_KEY, em);
+                    } else {
+                        throw new IllegalStateException("EntityManagerFactory is still not set after starting PersistService.");
+                    }
+                    return;
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to get EntityManagerFactory from JtaPersistService after starting it", e);
+            }
+            throw new IllegalStateException("EntityManagerFactory is still not set after starting PersistService.");
         } else {
-            throw new IllegalStateException("EntityManagerFactory is not set. Make sure PersistService.start() is called before UnitOfWork.begin().");
+            throw new IllegalStateException("EntityManagerFactory is not set and PersistService is not available to start.");
         }
     }
 
     @Override
     public void end()
     {
-        CallScopeProperties csp = IGuiceContext.get(CallScopeProperties.class);
-        Object em = csp.getProperties().get(ENTITY_MANAGER_KEY);
-        // Let's not penalize users for calling end() multiple times.
-        if (null == em)
-        {
+        if(isReactive() && reactive && session != null) {
+            session.onItem().invoke(Mutiny.Session::close);
             return;
-        }
-
-        try
+        }else
         {
-            if (reactive && em instanceof Mutiny.Session ems) {
-                ems.close();
-            } else if (em instanceof jakarta.persistence.EntityManager) {
-                ((jakarta.persistence.EntityManager) em).close();
+            CallScopeProperties csp = IGuiceContext.get(CallScopeProperties.class);
+            Object em = csp.getProperties().get(ENTITY_MANAGER_KEY);
+            // Let's not penalize users for calling end() multiple times.
+            if (null == em)
+            {
+                return;
             }
-        }
-        finally
-        {
-            csp.getProperties().remove(ENTITY_MANAGER_KEY);
+
+            try
+            {
+                if (reactive && em instanceof Mutiny.Session ems)
+                {
+                    ems.close();
+                }
+                else if (em instanceof jakarta.persistence.EntityManager)
+                {
+                    ((jakarta.persistence.EntityManager) em).close();
+                }
+            }
+            finally
+            {
+                csp.getProperties().remove(ENTITY_MANAGER_KEY);
+            }
         }
     }
 

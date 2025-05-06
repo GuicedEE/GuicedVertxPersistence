@@ -3,7 +3,7 @@ package com.guicedee.vertxpersistence;
 import com.google.inject.Key;
 import com.guicedee.client.CallScoper;
 import com.guicedee.client.IGuiceContext;
-import com.guicedee.guicedservlets.websockets.options.CallScopeProperties;
+import com.guicedee.client.CallScopeProperties;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 

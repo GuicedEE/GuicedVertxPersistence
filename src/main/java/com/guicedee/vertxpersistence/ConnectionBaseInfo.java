@@ -21,11 +21,11 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 /**
  * This class is a basic container for database connection information.
  * It provides properties for configuring database connections, particularly for Vertx SQL client.
- * 
+ *
  * <p><strong>Note:</strong> This class contains many legacy properties that are no longer needed for Vertx SQL client.
  * For new code, consider using {@link CleanConnectionBaseInfo} which provides a cleaner interface
  * with only the essential properties.</p>
- * 
+ *
  * @see CleanConnectionBaseInfo
  */
 @SuppressWarnings({"UnusedReturnValue", "JavaDoc", "unused"})
@@ -35,8 +35,8 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 @JsonInclude(NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
-@ToString
-@EqualsAndHashCode(of = {"persistenceUnitName","driver"})
+@ToString(exclude = {"password"})
+@EqualsAndHashCode(of = {"persistenceUnitName", "driver"})
 public abstract class ConnectionBaseInfo
 {
 	/**
@@ -107,9 +107,9 @@ public abstract class ConnectionBaseInfo
 	public ConnectionBaseInfo populateFromProperties(ParsedPersistenceXmlDescriptor unit, Properties filteredProperties)
 	{
 		for (IPropertiesConnectionInfoReader<?> connectionInfoReader : IGuiceContext
-				                                                            .instance()
-				                                                            .getLoader(IPropertiesConnectionInfoReader.class, true, ServiceLoader.load(
-				                                                                       IPropertiesConnectionInfoReader.class)))
+				.instance()
+				.getLoader(IPropertiesConnectionInfoReader.class, true, ServiceLoader.load(
+						IPropertiesConnectionInfoReader.class)))
 		{
 			connectionInfoReader.populateConnectionBaseInfo(unit, filteredProperties, this);
 		}
@@ -158,7 +158,6 @@ public abstract class ConnectionBaseInfo
 	 * Sets the minimum pool size
 	 *
 	 * @param minPoolSize
-	 *
 	 * @return
 	 */
 	public ConnectionBaseInfo setMinPoolSize(Integer minPoolSize)
@@ -181,7 +180,6 @@ public abstract class ConnectionBaseInfo
 	 * Sets the maximum pool size
 	 *
 	 * @param maxPoolSize
-	 *
 	 * @return
 	 */
 	public ConnectionBaseInfo setMaxPoolSize(Integer maxPoolSize)
@@ -256,7 +254,6 @@ public abstract class ConnectionBaseInfo
 	 * acquireIncrement at a time. Default value: 1.
 	 *
 	 * @param acquireIncrement
-	 *
 	 * @return
 	 */
 	public ConnectionBaseInfo setAcquireIncrement(Integer acquireIncrement)
@@ -281,7 +278,6 @@ public abstract class ConnectionBaseInfo
 	 * within in the acquisitionTimeout. Default value: 1.
 	 *
 	 * @param acquisitionInterval
-	 *
 	 * @return
 	 */
 	public ConnectionBaseInfo setAcquisitionInterval(Integer acquisitionInterval)
@@ -306,7 +302,6 @@ public abstract class ConnectionBaseInfo
 	 * exception thrown). Default value: 30.
 	 *
 	 * @param acquisitionTimeout
-	 *
 	 * @return
 	 */
 	public ConnectionBaseInfo setAcquisitionTimeout(Integer acquisitionTimeout)
@@ -331,7 +326,6 @@ public abstract class ConnectionBaseInfo
 	 * Defaults value: false.
 	 *
 	 * @param allowLocalTransactions
-	 *
 	 * @return
 	 */
 	public ConnectionBaseInfo setAllowLocalTransactions(Boolean allowLocalTransactions)
@@ -354,7 +348,6 @@ public abstract class ConnectionBaseInfo
 	 * Should the transaction timeout be passed to the resource via XAResource.setTransactionTimeout()? Default value: false.
 	 *
 	 * @param applyTransactionTimeout
-	 *
 	 * @return
 	 */
 	public ConnectionBaseInfo setApplyTransactionTimeout(Boolean applyTransactionTimeout)
@@ -381,7 +374,6 @@ public abstract class ConnectionBaseInfo
 	 * XA transactions. Default value: true.
 	 *
 	 * @param automaticEnlistingEnabled
-	 *
 	 * @return
 	 */
 	public ConnectionBaseInfo setAutomaticEnlistingEnabled(Boolean automaticEnlistingEnabled)
@@ -410,7 +402,6 @@ public abstract class ConnectionBaseInfo
 	 * connected, etc.). Default value: false.
 	 *
 	 * @param enableJdbc4ConnectionTest
-	 *
 	 * @return
 	 */
 	public ConnectionBaseInfo setEnableJdbc4ConnectionTest(Boolean enableJdbc4ConnectionTest)
@@ -435,7 +426,6 @@ public abstract class ConnectionBaseInfo
 	 * parameter to true when you know what you're doing. This is mostly useful in a development environment. Default value: false.
 	 *
 	 * @param ignoreRecoveryFailures
-	 *
 	 * @return
 	 */
 	public ConnectionBaseInfo setIgnoreRecoveryFailures(Boolean ignoreRecoveryFailures)
@@ -478,7 +468,6 @@ public abstract class ConnectionBaseInfo
 	 * property is false for backward compatibility, the recommended setting is true. Default value: false.
 	 *
 	 * @param shareTransactionConnections
-	 *
 	 * @return
 	 */
 	public ConnectionBaseInfo setShareTransactionConnections(Boolean shareTransactionConnections)
@@ -503,7 +492,6 @@ public abstract class ConnectionBaseInfo
 	 * connection pool.
 	 *
 	 * @param testQuery
-	 *
 	 * @return
 	 */
 	public ConnectionBaseInfo setTestQuery(String testQuery)
@@ -765,7 +753,6 @@ public abstract class ConnectionBaseInfo
 	 * Sets the jdbc private identifier
 	 *
 	 * @param jdbcIdentifier
-	 *
 	 * @return
 	 */
 	public ConnectionBaseInfo setJdbcIdentifier(String jdbcIdentifier)
@@ -788,7 +775,6 @@ public abstract class ConnectionBaseInfo
 	 * Sets the instance property name to use to specify the instance
 	 *
 	 * @param serverInstanceNameProperty
-	 *
 	 * @return
 	 */
 	public ConnectionBaseInfo setServerInstanceNameProperty(String serverInstanceNameProperty)
@@ -811,7 +797,6 @@ public abstract class ConnectionBaseInfo
 	 * If the connection pool must prefil
 	 *
 	 * @param prefill
-	 *
 	 * @return
 	 */
 	public ConnectionBaseInfo setPrefill(Boolean prefill)
@@ -834,7 +819,6 @@ public abstract class ConnectionBaseInfo
 	 * Sets to use strict minimum connections
 	 *
 	 * @param useStrictMin
-	 *
 	 * @return
 	 */
 	public ConnectionBaseInfo setUseStrictMin(Boolean useStrictMin)
@@ -865,7 +849,6 @@ public abstract class ConnectionBaseInfo
 	 * the database-side for open connections. Default value: 0.
 	 *
 	 * @param maxLifeTime
-	 *
 	 * @return
 	 */
 	public ConnectionBaseInfo setMaxLifeTime(Integer maxLifeTime)
@@ -898,6 +881,7 @@ public abstract class ConnectionBaseInfo
 
 	/**
 	 * The datasource class name of the driver to use
+	 *
 	 * @return
 	 */
 	public String getClassName()
@@ -907,6 +891,7 @@ public abstract class ConnectionBaseInfo
 
 	/**
 	 * The datasource of the driver to use
+	 *
 	 * @param className
 	 * @return
 	 */
@@ -918,6 +903,7 @@ public abstract class ConnectionBaseInfo
 
 	/**
 	 * If this is the connection that must be default bound when no @Named is present
+	 *
 	 * @return
 	 */
 	public boolean isDefaultConnection()
@@ -927,6 +913,7 @@ public abstract class ConnectionBaseInfo
 
 	/**
 	 * If this is the connection that must be default bound when no @Named is present
+	 *
 	 * @param defaultConnection
 	 * @return
 	 */
@@ -953,20 +940,24 @@ public abstract class ConnectionBaseInfo
 	 *
 	 * @return The JDBC URL as a string
 	 */
-	public String getJdbcUrl() {
+	public String getJdbcUrl()
+	{
 		// If a URL is already set, return it
-		if (url != null && !url.isEmpty()) {
+		if (url != null && !url.isEmpty())
+		{
 			return url;
 		}
 
 		// Build URL based on driver type
 		StringBuilder jdbcUrl = new StringBuilder("jdbc:");
 
-		if (driver == null) {
+		if (driver == null)
+		{
 			throw new IllegalStateException("Driver must be set to generate a JDBC URL");
 		}
 
-		switch (driver.toLowerCase()) {
+		switch (driver.toLowerCase())
+		{
 			case "postgresql":
 				jdbcUrl.append("postgresql://");
 				appendHostPortDatabase(jdbcUrl);
@@ -980,25 +971,35 @@ public abstract class ConnectionBaseInfo
 			case "oracle":
 				jdbcUrl.append("oracle:thin:@");
 				// Oracle can use either SID or Service Name format
-				if (getCustomProperties().containsKey("useServiceName") && 
-					Boolean.parseBoolean(getCustomProperties().get("useServiceName"))) {
+				if (getCustomProperties().containsKey("useServiceName") &&
+						Boolean.parseBoolean(getCustomProperties().get("useServiceName")))
+				{
 					jdbcUrl.append("//");
 					appendHostPortDatabase(jdbcUrl);
-				} else {
+				}
+				else
+				{
 					// SID format
-					if (serverName != null) {
+					if (serverName != null)
+					{
 						jdbcUrl.append(serverName);
-					} else {
+					}
+					else
+					{
 						jdbcUrl.append("localhost");
 					}
 
-					if (port != null) {
+					if (port != null)
+					{
 						jdbcUrl.append(":").append(port);
-					} else {
+					}
+					else
+					{
 						jdbcUrl.append(":1521");
 					}
 
-					if (databaseName != null) {
+					if (databaseName != null)
+					{
 						jdbcUrl.append(":").append(databaseName);
 					}
 				}
@@ -1006,21 +1007,27 @@ public abstract class ConnectionBaseInfo
 
 			case "sqlserver":
 				jdbcUrl.append("sqlserver://");
-				if (serverName != null) {
+				if (serverName != null)
+				{
 					jdbcUrl.append(serverName);
-				} else {
+				}
+				else
+				{
 					jdbcUrl.append("localhost");
 				}
 
-				if (port != null) {
+				if (port != null)
+				{
 					jdbcUrl.append(":").append(port);
 				}
 
-				if (databaseName != null) {
+				if (databaseName != null)
+				{
 					jdbcUrl.append(";databaseName=").append(databaseName);
 				}
 
-				if (instanceName != null) {
+				if (instanceName != null)
+				{
 					jdbcUrl.append(";instanceName=").append(instanceName);
 				}
 				break;
@@ -1039,32 +1046,43 @@ public abstract class ConnectionBaseInfo
 
 		// Add any additional parameters from custom properties
 		boolean firstParam = true;
-		for (Map.Entry<String, String> entry : customProperties.entrySet()) {
+		for (Map.Entry<String, String> entry : customProperties.entrySet())
+		{
 			String key = entry.getKey();
 			String value = entry.getValue();
 
 			// Skip properties that shouldn't be in the URL
-			if (key.startsWith("hibernate.") || key.startsWith("jakarta.") || 
-				key.startsWith("javax.") || key.equals("useServiceName")) {
+			if (key.startsWith("hibernate.") || key.startsWith("jakarta.") ||
+					key.startsWith("javax.") || key.equals("useServiceName"))
+			{
 				continue;
 			}
 
 			// Add parameter separator
-			if (firstParam) {
+			if (firstParam)
+			{
 				// For most databases, parameters start with ?
 				// For SQL Server, we already have ; as separator
-				if (!driver.equalsIgnoreCase("sqlserver")) {
+				if (!driver.equalsIgnoreCase("sqlserver"))
+				{
 					jdbcUrl.append("?");
-				} else {
+				}
+				else
+				{
 					jdbcUrl.append(";");
 				}
 				firstParam = false;
-			} else {
+			}
+			else
+			{
 				// For most databases, parameters are separated with &
 				// For SQL Server, parameters are separated with ;
-				if (!driver.equalsIgnoreCase("sqlserver")) {
+				if (!driver.equalsIgnoreCase("sqlserver"))
+				{
 					jdbcUrl.append("&");
-				} else {
+				}
+				else
+				{
 					jdbcUrl.append(";");
 				}
 			}
@@ -1077,22 +1095,31 @@ public abstract class ConnectionBaseInfo
 
 	/**
 	 * Helper method to append host, port, and database to a JDBC URL
-	 * 
+	 *
 	 * @param jdbcUrl The StringBuilder containing the JDBC URL being built
 	 */
-	private void appendHostPortDatabase(StringBuilder jdbcUrl) {
-		if (serverName != null) {
+	private void appendHostPortDatabase(StringBuilder jdbcUrl)
+	{
+		if (serverName != null)
+		{
 			jdbcUrl.append(serverName);
-		} else {
+		}
+		else
+		{
 			jdbcUrl.append("localhost");
 		}
 
-		if (port != null) {
+		if (port != null)
+		{
 			jdbcUrl.append(":").append(port);
-		} else {
+		}
+		else
+		{
 			// Add default port based on driver type
-			if (driver != null) {
-				switch (driver.toLowerCase()) {
+			if (driver != null)
+			{
+				switch (driver.toLowerCase())
+				{
 					case "postgresql":
 						jdbcUrl.append(":5432");
 						break;
@@ -1109,7 +1136,8 @@ public abstract class ConnectionBaseInfo
 			}
 		}
 
-		if (databaseName != null) {
+		if (databaseName != null)
+		{
 			jdbcUrl.append("/").append(databaseName);
 		}
 	}

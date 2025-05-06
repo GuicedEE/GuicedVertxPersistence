@@ -8,16 +8,13 @@ import com.google.inject.persist.UnitOfWork;
 import com.guicedee.client.CallScoper;
 import com.guicedee.client.IGuiceContext;
 import com.guicedee.guicedservlets.servlets.services.scopes.CallScope;
-import com.guicedee.guicedservlets.websockets.options.CallScopeProperties;
+import com.guicedee.client.CallScopeProperties;
+import com.guicedee.client.CallScopeSource;
 import com.guicedee.vertx.spi.VertXPreStartup;
 import com.guicedee.vertxpersistence.ConnectionBaseInfo;
-import com.guicedee.vertxpersistence.TransactionalCallable;
-import com.guicedee.vertxpersistence.implementations.VertxPersistenceModule;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.sqlclient.SqlClient;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +28,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author Dhanji R. Prasanna (dhanji@gmail.com)
@@ -132,7 +129,7 @@ class JtaLocalTxnInterceptor implements MethodInterceptor
             emOrSession = csp.getProperties().get(JtaPersistService.ENTITY_MANAGER_KEY);
             if (emOrSession instanceof Uni<?> uni)
             {
-                emOrSession = uni.await().indefinitely();
+                emOrSession = uni.await().atMost(Duration.of(1, ChronoUnit.MINUTES)) ;
             }
             if (!(emOrSession instanceof Mutiny.Session))
             {
@@ -184,6 +181,19 @@ class JtaLocalTxnInterceptor implements MethodInterceptor
             // Create a TransactionalCallable that will execute the method in a reactive transaction
             Promise<Object> promise = Promise.promise();
             CallScoper callScoper = IGuiceContext.get(CallScoper.class);
+            AtomicBoolean started = new AtomicBoolean(false);
+            if (!callScoper.isStartedScope())
+            {
+                callScoper.enter();
+                started.set(true);
+                CallScopeProperties csp2 = IGuiceContext.get(CallScopeProperties.class);
+                csp.getProperties().put("startedOnThisThread", started);
+                csp.setSource(CallScopeSource.Transaction);
+            }
+            else
+            {
+                started.set(false);
+            }
             var values = callScoper.getValues();
             cc.runOnContext((a) -> {
                 mutinySession.withTransaction((tx) -> {
@@ -192,7 +202,6 @@ class JtaLocalTxnInterceptor implements MethodInterceptor
                     scoper.enter();
                     try
                     {
-                        System.out.println("Execute in transaction");
                         CallScopeProperties csp2 = IGuiceContext.get(CallScopeProperties.class);
                         if(csp2.getProperties().containsKey(JtaPersistService.ENTITY_MANAGER_KEY))
                         {
@@ -260,7 +269,16 @@ class JtaLocalTxnInterceptor implements MethodInterceptor
                 });
                 //return null;
             });
-            return promise.future();
+
+            return promise.future().onComplete((res) -> {
+                if (started.get())
+                {
+                    CallScoper callScoperss = IGuiceContext.get(CallScoper.class);
+                    unitOfWork.end();
+                    callScoperss.exit();
+                    started.set(false);
+                }
+            });
         }
 
         throw new UnsupportedOperationException("Only reactive UnitOfWork with Mutiny.Session is supported at this time.");

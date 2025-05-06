@@ -26,6 +26,7 @@ import com.google.inject.persist.finder.DynamicFinder;
 import com.google.inject.persist.finder.Finder;
 import com.guicedee.vertxpersistence.ConnectionBaseInfo;
 import com.guicedee.vertxpersistence.annotations.InvalidConnectionInfoException;
+import com.guicedee.vertxpersistence.implementations.MutinySessionProvider;
 import com.guicedee.vertxpersistence.implementations.SqlClientProvider;
 import io.vertx.sqlclient.SqlClient;
 import jakarta.persistence.EntityManager;
@@ -124,6 +125,11 @@ public final class JtaPersistModule extends PersistModule
             bind(key).to(jtaPersistServiceKey);
         }
 
+        for(Key<Mutiny.Session> mutinySessionsKey : getKeys(Mutiny.Session.class))
+        {
+            bind(mutinySessionsKey).toProvider(MutinySessionProvider.class);
+        }
+
         SqlClientProvider sqlClientProvider = new SqlClientProvider();
         sqlClientProvider.setPersistService(ps);
 
@@ -197,6 +203,7 @@ public final class JtaPersistModule extends PersistModule
             bind(PersistService.class).to(getKey(PersistService.class));
             bind(JtaPersistOptions.class).to(getKey(JtaPersistOptions.class));
             bind(Mutiny.SessionFactory.class).toProvider(sqlClientProvider);
+            bind(Mutiny.Session.class).toProvider(MutinySessionProvider.class);
 
             // If reactive, also bind JtaUnitOfWork as default
             if (connectionBaseInfo.isReactive()) {
