@@ -26,12 +26,7 @@ import com.google.inject.persist.finder.DynamicFinder;
 import com.google.inject.persist.finder.Finder;
 import com.guicedee.vertxpersistence.ConnectionBaseInfo;
 import com.guicedee.vertxpersistence.annotations.InvalidConnectionInfoException;
-import com.guicedee.vertxpersistence.implementations.MutinySessionProvider;
-import com.guicedee.vertxpersistence.implementations.SqlClientProvider;
-import io.vertx.sqlclient.SqlClient;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.hibernate.reactive.mutiny.Mutiny;
 
@@ -50,35 +45,26 @@ import java.util.Map;
 public final class JtaPersistModule extends PersistModule
 {
     private final String jpaUnit;
-    private final JtaPersistOptions options;
     private final ConnectionBaseInfo connectionBaseInfo;
+
     private final com.guicedee.vertxpersistence.annotations.EntityManager annotation;
 
     private static boolean defaultSet = false;
 
     public JtaPersistModule(String jpaUnit, ConnectionBaseInfo connectionBaseInfo, com.guicedee.vertxpersistence.annotations.EntityManager annotation)
     {
-        this(jpaUnit, JtaPersistOptions.builder()
-                                       .setAutoBeginWorkOnEntityManagerCreation(true)
-                                       .build(), connectionBaseInfo, annotation);
-    }
-
-    public JtaPersistModule(String jpaUnit, JtaPersistOptions options, ConnectionBaseInfo connectionBaseInfo, com.guicedee.vertxpersistence.annotations.EntityManager annotation)
-    {
         this.annotation = annotation;
         Preconditions.checkArgument(
                 null != jpaUnit && jpaUnit.length() > 0, "JPA unit name must be a non-empty string.");
         this.jpaUnit = jpaUnit;
-        this.options = options;
         this.connectionBaseInfo = connectionBaseInfo;
     }
 
     private Map<?, ?> properties;
-    private MethodInterceptor transactionInterceptor;
 
     /**
      * Returns a Key for the given class with the jpaUnit as the named binding.
-     * 
+     *
      * @param clazz The class to create a Key for
      * @return A Key for the given class with the jpaUnit as the named binding
      */
@@ -90,7 +76,7 @@ public final class JtaPersistModule extends PersistModule
     /**
      * Returns a List of Keys for the given class.
      * The first Key uses the jpaUnit as the named binding.
-     * 
+     *
      * @param clazz The class to create Keys for
      * @return A List of Keys for the given class
      */
@@ -104,61 +90,63 @@ public final class JtaPersistModule extends PersistModule
     @Override
     protected void configurePersistence()
     {
-        JtaPersistService ps = new JtaPersistService(options, jpaUnit, properties);
+        JtaPersistService ps = new JtaPersistService(jpaUnit, properties);
 
         // Bind with both keys (named and annotation)
-        for (Key<Map> key : getKeys(Map.class)) {
+        for (Key<Map> key : getKeys(Map.class))
+        {
             bind(key).toInstance(properties);
         }
 
-        for (Key<JtaPersistOptions> key : getKeys(JtaPersistOptions.class)) {
-            bind(key).toInstance(options);
-        }
-
-        for (Key<JtaPersistService> key : getKeys(JtaPersistService.class)) {
+        for (Key<JtaPersistService> key : getKeys(JtaPersistService.class))
+        {
             bind(key).toInstance(ps);
         }
 
         Key<JtaPersistService> jtaPersistServiceKey = getKey(JtaPersistService.class);
 
-        for (Key<PersistService> key : getKeys(PersistService.class)) {
+        for (Key<PersistService> key : getKeys(PersistService.class))
+        {
             bind(key).to(jtaPersistServiceKey);
         }
 
-        for(Key<Mutiny.Session> mutinySessionsKey : getKeys(Mutiny.Session.class))
-        {
-            bind(mutinySessionsKey).toProvider(MutinySessionProvider.class);
-        }
-
-        SqlClientProvider sqlClientProvider = new SqlClientProvider();
-        sqlClientProvider.setPersistService(ps);
-
+        //  SqlClientProvider sqlClientProvider = new SqlClientProvider();
+        // sqlClientProvider.setPersistService(ps);
+        ReactiveUnitOfWork.EntityManagerFactoryProvider entityManagerFactoryProvider = null;
         // Check if the connection is reactive
-        if (connectionBaseInfo.isReactive()) {
+        if (connectionBaseInfo.isReactive())
+        {
             // For reactive connections, use JtaUnitOfWork
-            JtaUnitOfWork unitOfWork = new JtaUnitOfWork(jpaUnit, true);
-            // Set the UnitOfWork on JtaPersistService
-            ps.setUnitOfWork(unitOfWork, true);
-
+            ReactiveUnitOfWork unitOfWork = new ReactiveUnitOfWork(jpaUnit);
             // Set the PersistService on UnitOfWork
             unitOfWork.setPersistService(ps);
 
-            bind(Key.get(Mutiny.SessionFactory.class,Names.named(jpaUnit))).toProvider(sqlClientProvider);
-            requestInjection(sqlClientProvider);
+            //bind(Key.get(Mutiny.SessionFactory.class,Names.named(jpaUnit))).toProvider(sqlClientProvider);
+            // requestInjection(sqlClientProvider);
 
             // Bind JtaUnitOfWork instance
-            for (Key<JtaUnitOfWork> key : getKeys(JtaUnitOfWork.class)) {
+            for (Key<ReactiveUnitOfWork> key : getKeys(ReactiveUnitOfWork.class))
+            {
                 bind(key).toInstance(unitOfWork);
             }
 
             // Bind UnitOfWork to JtaUnitOfWork
-            Key<JtaUnitOfWork> jtaUnitOfWorkKey = getKey(JtaUnitOfWork.class);
-            for (Key<UnitOfWork> key : getKeys(UnitOfWork.class)) {
+            Key<ReactiveUnitOfWork> jtaUnitOfWorkKey = getKey(ReactiveUnitOfWork.class);
+            for (Key<UnitOfWork> key : getKeys(UnitOfWork.class))
+            {
                 bind(key).to(jtaUnitOfWorkKey);
             }
 
+            entityManagerFactoryProvider =
+                    new ReactiveUnitOfWork.EntityManagerFactoryProvider(unitOfWork);
+
+            for (Key<Mutiny.SessionFactory> key : getKeys(Mutiny.SessionFactory.class))
+            {
+                bind(key).toProvider(entityManagerFactoryProvider);
+            }
+
             // Create EntityManagerFactory provider that also sets the factory on JtaUnitOfWork
-            JtaPersistService.EntityManagerFactoryProvider entityManagerFactoryProvider = 
+           /* JtaPersistService.EntityManagerFactoryProvider entityManagerFactoryProvider =
                 new JtaPersistService.EntityManagerFactoryProvider(ps) {
                     @Override
                     public EntityManagerFactory get() {
@@ -166,48 +154,29 @@ public final class JtaPersistModule extends PersistModule
                         unitOfWork.setEntityManagerFactory(factory);
                         return factory;
                     }
-                };
+                };*/
 
-            for (Key<EntityManagerFactory> key : getKeys(EntityManagerFactory.class)) {
+           /* for (Key<EntityManagerFactory> key : getKeys(EntityManagerFactory.class)) {
                 bind(key).toProvider(entityManagerFactoryProvider);
-            }
-        } else {
-            // For non-reactive connections, use JtaPersistService as UnitOfWork
-            for (Key<UnitOfWork> key : getKeys(UnitOfWork.class)) {
-                bind(key).to(jtaPersistServiceKey);
-            }
-
-            // Standard EntityManagerFactory provider
-            JtaPersistService.EntityManagerFactoryProvider entityManagerFactoryProvider = 
-                new JtaPersistService.EntityManagerFactoryProvider(ps);
-
-            for (Key<EntityManagerFactory> key : getKeys(EntityManagerFactory.class)) {
-                bind(key).toProvider(entityManagerFactoryProvider);
-            }
+            }*/
         }
-
-        for (Key<EntityManager> key : getKeys(EntityManager.class)) {
-            bind(key).toProvider(jtaPersistServiceKey);
-        }
-
-        transactionInterceptor = new JtaLocalTxnInterceptor(ps, connectionBaseInfo);
-        requestInjection(transactionInterceptor);
 
         if (!defaultSet && connectionBaseInfo.isDefaultConnection())
         {
             defaultSet = true;
             // For default bindings, we use the named key
-            bind(EntityManagerFactory.class).to(getKey(EntityManagerFactory.class));
-            bind(EntityManager.class).to(getKey(EntityManager.class));
+            //   bind(EntityManagerFactory.class).to(getKey(EntityManagerFactory.class));
+            //    bind(EntityManager.class).to(getKey(EntityManager.class));
             bind(UnitOfWork.class).to(getKey(UnitOfWork.class));
             bind(PersistService.class).to(getKey(PersistService.class));
-            bind(JtaPersistOptions.class).to(getKey(JtaPersistOptions.class));
-            bind(Mutiny.SessionFactory.class).toProvider(sqlClientProvider);
-            bind(Mutiny.Session.class).toProvider(MutinySessionProvider.class);
+            //   bind(JtaPersistOptions.class).to(getKey(JtaPersistOptions.class));
+            bind(Mutiny.SessionFactory.class).toProvider(entityManagerFactoryProvider);
+            //  bind(Mutiny.Session.class).toProvider(MutinySessionProvider.class);
 
             // If reactive, also bind JtaUnitOfWork as default
-            if (connectionBaseInfo.isReactive()) {
-                bind(JtaUnitOfWork.class).to(getKey(JtaUnitOfWork.class));
+            if (connectionBaseInfo.isReactive())
+            {
+                bind(ReactiveUnitOfWork.class).to(getKey(ReactiveUnitOfWork.class));
             }
         }
         else if (defaultSet && connectionBaseInfo.isDefaultConnection())
@@ -219,12 +188,6 @@ public final class JtaPersistModule extends PersistModule
         {
             bindFinder(finder);
         }
-    }
-
-    @Override
-    protected MethodInterceptor getTransactionInterceptor()
-    {
-        return transactionInterceptor;
     }
 
     /**
@@ -322,7 +285,7 @@ public final class JtaPersistModule extends PersistModule
                 (T)
                         Proxy.newProxyInstance(
                                 Thread.currentThread()
-                                      .getContextClassLoader(),
+                                        .getContextClassLoader(),
                                 new Class<?>[]{iface},
                                 finderInvoker);
 

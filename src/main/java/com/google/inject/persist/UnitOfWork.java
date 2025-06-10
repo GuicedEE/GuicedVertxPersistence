@@ -16,6 +16,10 @@
 
 package com.google.inject.persist;
 
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.Future;
+import org.hibernate.reactive.mutiny.Mutiny;
+
 /**
  * This interface is used to gain manual control over the unit of work. This is mostly to do work in
  * non-request, non-transactional threads. Or where more fine-grained control over the unit of work
@@ -46,12 +50,4 @@ public interface UnitOfWork {
    */
   void begin();
 
-  /**
-   * Declares an end to the current Unit of Work. Underneath, causes any open session to the data
-   * layer to close. If there is no Unit of work open, then the call returns silently. You can
-   * safely invoke end() repeatedly.
-   *
-   * <p>Transaction semantics are not affected.
-   */
-  void end();
 }

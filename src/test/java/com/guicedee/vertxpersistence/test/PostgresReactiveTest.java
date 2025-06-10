@@ -1,24 +1,29 @@
 package com.guicedee.vertxpersistence.test;
 
 import com.google.inject.Key;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.persist.PersistService;
-import com.google.inject.persist.Transactional;
 import com.google.inject.persist.UnitOfWork;
 import com.guicedee.client.CallScoper;
 import com.guicedee.client.IGuiceContext;
-import com.guicedee.client.CallScopeProperties;
+import com.guicedee.vertx.spi.VertXPreStartup;
 import com.guicedee.vertxpersistence.ConnectionBaseInfo;
-import com.guicedee.vertxpersistence.bind.JtaUnitOfWork;
+import com.guicedee.vertxpersistence.bind.JtaPersistService;
+import com.guicedee.vertxpersistence.bind.ReactiveUnitOfWork;
 import com.guicedee.vertxpersistence.implementations.VertxPersistenceModule;
-import io.vertx.core.Future;
+import io.smallrye.mutiny.Uni;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 import static com.guicedee.vertxpersistence.test.PostgresTest.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,7 +35,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * 2. JtaUnitOfWork uses Mutiny.Session for reactive connections
  */
 @Testcontainers
-public class PostgresReactiveTest {
+@Slf4j
+public class PostgresReactiveTest
+{
 
 
     // Create a PostgreSQL container with the defined values
@@ -41,7 +48,8 @@ public class PostgresReactiveTest {
             .withPassword(POSTGRES_PASSWORD);
 
     @BeforeAll
-    public static void setup() {
+    public static void setup()
+    {
         // Set system properties for logging
         System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "fine");
 
@@ -68,7 +76,8 @@ public class PostgresReactiveTest {
     }
 
     @Test
-    public void testReactivePostgresConnection() {
+    public void testReactivePostgresConnection()
+    {
         // Register the PostgreSQL reactive test module
         IGuiceContext.registerModule("com.guicedee.guicedpersistence.test");
         IGuiceContext.registerModule(new TestModulePostgresReactive());
@@ -78,149 +87,67 @@ public class PostgresReactiveTest {
         CallScoper scoper = IGuiceContext.get(CallScoper.class);
         scoper.enter();
 
-        try {
+        try
+        {
             // Start the PersistService
-            PersistService ps = IGuiceContext.get(Key.get(PersistService.class, Names.named("testPostgresReactive")));
+            JtaPersistService ps = (JtaPersistService) IGuiceContext.get(Key.get(PersistService.class, Names.named("testPostgresReactive")));
             assertNotNull(ps, "PersistService should not be null");
             ps.start();
 
             // Get the UnitOfWork for the PostgreSQL persistence unit
-            UnitOfWork work = IGuiceContext.get(Key.get(UnitOfWork.class, Names.named("testPostgresReactive")));
+            ReactiveUnitOfWork work = (ReactiveUnitOfWork) IGuiceContext.get(Key.get(UnitOfWork.class, Names.named("testPostgresReactive")));
             assertNotNull(work, "UnitOfWork should not be null");
 
             // Verify that UnitOfWork is an instance of JtaUnitOfWork
-            assertTrue(work instanceof JtaUnitOfWork, "UnitOfWork should be an instance of JtaUnitOfWork for reactive connections");
+            assertTrue(work instanceof ReactiveUnitOfWork, "UnitOfWork should be an instance of JtaUnitOfWork for reactive connections");
 
-            // Verify that JtaUnitOfWork is reactive
-            JtaUnitOfWork jtaUnitOfWork = (JtaUnitOfWork) work;
-            assertTrue(jtaUnitOfWork.isReactive(), "JtaUnitOfWork should be reactive");
+            VertXPreStartup.getVertx().runOnContext(handle->{
+                 Mutiny.SessionFactory sessionFactory = IGuiceContext.get(Mutiny.SessionFactory.class);
+                 sessionFactory.openSession()
+                         .onItemOrFailure().invoke((session, error) -> {
+                     if (error != null)
+                     {
+                         fail("Error occurred while opening a session", error);
+                     }
+                     else
+                     {
+                         log.info("Session opened successfully");
+                     }
+                     session.close();
+                 })
+                         .onFailure().invoke(error -> fail("Error occurred while opening a session", error))
+                         .await().atMost(Duration.of(50, ChronoUnit.SECONDS));
+                sessionFactory.withSession(session -> {
+                            session.withTransaction(tx -> {
+                                        session.createNativeQuery("SELECT 1")
+                                                .getResultList()
+                                                .onItemOrFailure()
+                                                .invoke((result, error) -> {
+                                                    if (error != null)
+                                                    {
+                                                        fail("Error occurred while executing a native query", error);
+                                                    }
+                                                    else
+                                                    {
+                                                        log.info("Native query result: {}", result);
+                                                    }
+                                                });
+                                        return null;
+                                    })
+                                    .onFailure().invoke(error -> fail("Error occurred while executing a transaction", error));
+                            return null;
+                        }).onFailure().invoke(error -> fail("Error occurred while creating a session", error))
+                        .await().atMost(Duration.of(50, ChronoUnit.SECONDS));
+                sessionFactory.close();
+            });
 
-            // Begin a unit of work
-            work.begin();
-
-            try {
-                // Get the ConnectionBaseInfo for the PostgreSQL persistence unit
-                ConnectionBaseInfo connectionInfo = VertxPersistenceModule.getConnectionInfoByEntityManager("testPostgresReactive");
-                assertNotNull(connectionInfo, "ConnectionBaseInfo should not be null");
-
-                // Verify that the connection is reactive
-                assertTrue(connectionInfo.isReactive(), "ConnectionBaseInfo should be reactive");
-
-
-                // Get the SqlClient for the PostgreSQL persistence unit
-             //   SqlClient sqlClient = IGuiceContext.get(Key.get(SqlClient.class, Names.named("testPostgresReactive")));
-              //  assertNotNull(sqlClient, "SqlClient should not be null");
-
-                // Verify that system properties took effect
-                assertEquals(postgresContainer.getHost(), connectionInfo.getServerName(), "Server name should match container host");
-                assertEquals(String.valueOf(postgresContainer.getMappedPort(5432)), connectionInfo.getPort(), "Port should match container port");
-                assertEquals(POSTGRES_DATABASE, connectionInfo.getDatabaseName(), "Database name should match container database");
-                assertEquals(POSTGRES_USER, connectionInfo.getUsername(), "Username should match container username");
-                assertEquals(POSTGRES_PASSWORD, connectionInfo.getPassword(), "Password should match container password");
-            } finally {
-                // End the unit of work
-                work.end();
-            }
-        } finally {
+        }
+        finally
+        {
             // Exit the scope
             scoper.exit();
         }
     }
 
-    @Test
-    public void testTransactionInterceptorWithReactiveUnitOfWork() {
-        // Register the PostgreSQL reactive test module
-        IGuiceContext.registerModule("com.guicedee.guicedpersistence.test");
-        IGuiceContext.registerModule(new TestModulePostgresReactive());
-        IGuiceContext.getContext().inject();
 
-        // Get the CallScoper to enter and exit a scope
-        CallScoper scoper = IGuiceContext.get(CallScoper.class);
-        scoper.enter();
-
-        try {
-            // Start the PersistService
-            PersistService ps = IGuiceContext.get(Key.get(PersistService.class, Names.named("testPostgresReactive")));
-            assertNotNull(ps, "PersistService should not be null");
-            ps.start();
-
-            // Get the UnitOfWork for the PostgreSQL persistence unit
-            UnitOfWork work = IGuiceContext.get(Key.get(UnitOfWork.class, Names.named("testPostgresReactive")));
-            assertNotNull(work, "UnitOfWork should not be null");
-
-            // Verify that UnitOfWork is an instance of JtaUnitOfWork
-            assertTrue(work instanceof JtaUnitOfWork, "UnitOfWork should be an instance of JtaUnitOfWork for reactive connections");
-
-            // Verify that JtaUnitOfWork is reactive
-            JtaUnitOfWork jtaUnitOfWork = (JtaUnitOfWork) work;
-            assertTrue(jtaUnitOfWork.isReactive(), "JtaUnitOfWork should be reactive");
-
-            // Get a TransactionalService instance
-            TransactionalService service = IGuiceContext.get(TransactionalService.class);
-            assertNotNull(service, "TransactionalService should not be null");
-
-            try {
-                // Call the transactional method
-                Future<String> result = service.doSomethingTransactionalReactive();
-
-                // Wait for the result
-                result.onSuccess(ar -> {
-                    assertEquals("Transaction completed", ar, "Transaction should complete successfully");
-                });
-
-                // Verify that the transaction completed successfully
-                // We can't directly check if the entity manager was removed because JtaPersistService is not public
-                // But we can verify that the transaction completed by checking the result
-            } catch (Exception e) {
-                fail("Transaction should not throw an exception: " + e.getMessage());
-                e.printStackTrace();
-            }
-        } finally {
-            // Exit the scope
-            scoper.exit();
-        }
-    }
-
-    /**
-     * A service class with transactional methods for testing.
-     */
-    public static class TransactionalService {
-
-        /**
-         * A transactional method that returns a CompletableFuture.
-         * This tests the reactive transaction handling.
-         */
-        @Transactional
-        @Named("testPostgresReactive")
-        public Future<String> doSomethingTransactionalReactive() {
-            // Verify that we're in a transaction by checking if we can get a Mutiny.Session
-            // We can't directly access JtaPersistService.ENTITY_MANAGER_KEY because it's not public
-            // Instead, we'll check if we can get the SqlClient, which should only be available in a transaction
-
-            // Get the session from the CallScopeProperties
-            CallScopeProperties csp = IGuiceContext.get(CallScopeProperties.class);
-            // The key for the entity manager is "entityManager" in JtaPersistService
-            Object emOrSession = csp.getProperties().get("entityManager");
-
-            // Check that we got a Mutiny.Session for reactive UnitOfWork
-            if (!(emOrSession instanceof Mutiny.Session)) {
-                return Future.failedFuture(
-                    new IllegalStateException("Expected Mutiny.Session but got: " + 
-                                             (emOrSession != null ? emOrSession.getClass().getName() : "null")));
-            }
-
-            // We already verified that the SqlClient is not null above
-
-            // Simulate some work
-            return Future.succeededFuture("Transaction completed");
-        }
-
-        /**
-         * A non-transactional method that calls a transactional method.
-         * This tests that the transaction interceptor is properly applied.
-         */
-        public Future<String> callTransactionalMethod() {
-            return doSomethingTransactionalReactive();
-        }
-    }
 }

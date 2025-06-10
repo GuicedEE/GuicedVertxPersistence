@@ -55,6 +55,7 @@
             <artifactId>vertx-mysql-client</artifactId>
         </dependency>-->
 
+
         <dependency>
             <groupId>com.guicedee</groupId>
             <artifactId>guiced-vertx</artifactId>

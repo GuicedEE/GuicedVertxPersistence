@@ -17,18 +17,12 @@
 package com.guicedee.vertxpersistence.bind;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.internal.InternalFlags;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.persist.PersistService;
-import com.google.inject.persist.Transactional;
 import com.google.inject.persist.UnitOfWork;
-import org.aopalliance.intercept.MethodInterceptor;
 
 import java.lang.reflect.Method;
-
-import static com.google.inject.matcher.Matchers.annotatedWith;
-import static com.google.inject.matcher.Matchers.any;
 
 /**
  * Install this module to add guice-persist library support for JPA persistence providers.
@@ -45,7 +39,7 @@ public abstract class PersistModule extends AbstractModule
 
         requireBinding(PersistService.class);
         requireBinding(UnitOfWork.class);
-        MethodInterceptor transactionInterceptor = getTransactionInterceptor();
+      /*  MethodInterceptor transactionInterceptor = getTransactionInterceptor();
 
         if (InternalFlags.isBytecodeGenEnabled())
         {
@@ -59,12 +53,10 @@ public abstract class PersistModule extends AbstractModule
                     annotatedWith(jakarta.transaction.Transactional.class), NOT_OBJECT_METHOD, transactionInterceptor);
             // method-level @Transacational
             bindInterceptor(any(), annotatedWith(jakarta.transaction.Transactional.class), transactionInterceptor);
-        }
+        }*/
     }
 
     protected abstract void configurePersistence();
-
-    protected abstract MethodInterceptor getTransactionInterceptor();
 
     private static final Matcher<Method> NOT_OBJECT_METHOD =
             new AbstractMatcher<Method>()

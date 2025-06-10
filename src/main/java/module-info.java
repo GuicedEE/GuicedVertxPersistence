@@ -1,7 +1,6 @@
 import com.guicedee.guicedinjection.interfaces.IGuiceConfigurator;
 import com.guicedee.vertxpersistence.IPropertiesConnectionInfoReader;
 import com.guicedee.vertxpersistence.IPropertiesEntityManagerReader;
-import com.guicedee.vertxpersistence.bind.RestServiceInterceptor;
 import com.guicedee.vertxpersistence.implementations.GuicedConfigurator;
 import com.guicedee.vertxpersistence.implementations.hibernateproperties.HibernateEntityManagerProperties;
 import com.guicedee.vertxpersistence.implementations.systemproperties.SystemEnvironmentVariablesPropertiesReader;
@@ -46,8 +45,6 @@ module com.guicedee.vertxpersistence {
 
     uses com.guicedee.vertxpersistence.IPropertiesConnectionInfoReader;
     uses com.guicedee.vertxpersistence.IPropertiesEntityManagerReader;
-
-    provides com.guicedee.guicedservlets.rest.services.RestInterceptor with RestServiceInterceptor;
 
     provides IGuiceConfigurator with GuicedConfigurator;
     provides IPropertiesEntityManagerReader with SystemEnvironmentVariablesPropertiesReader, HibernateEntityManagerProperties;

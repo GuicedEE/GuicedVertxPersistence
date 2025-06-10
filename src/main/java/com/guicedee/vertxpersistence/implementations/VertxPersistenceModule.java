@@ -7,19 +7,20 @@ import com.google.inject.persist.UnitOfWork;
 import com.guicedee.client.IGuiceContext;
 import com.guicedee.guicedinjection.interfaces.IGuiceModule;
 import com.guicedee.vertxpersistence.ConnectionBaseInfo;
-import com.guicedee.vertxpersistence.ConnectionBaseInfoFactory;
-import com.guicedee.vertxpersistence.DatabaseModule;
-import com.guicedee.vertxpersistence.VertxConnectionBaseInfo;
 import com.guicedee.vertxpersistence.annotations.EntityManager;
 import com.guicedee.vertxpersistence.bind.JtaPersistModule;
-import com.guicedee.vertxpersistence.bind.JtaPersistOptions;
+import io.github.classgraph.AnnotationInfo;
+import io.github.classgraph.PackageInfo;
+import io.github.classgraph.ScanResult;
 import io.vertx.sqlclient.SqlClient;
-import io.github.classgraph.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.annotation.Annotation;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 public class VertxPersistenceModule extends AbstractModule implements IGuiceModule<VertxPersistenceModule>
@@ -295,13 +296,8 @@ public class VertxPersistenceModule extends AbstractModule implements IGuiceModu
      */
     private JtaPersistModule createAndBindModule(ConnectionBaseInfo connectionInfo, EntityManager emAnno)
     {
-        JtaPersistOptions options = JtaPersistOptions.builder()
-                .setAutoBeginWorkOnEntityManagerCreation(true)
-                .build();
-
         JtaPersistModule module = new JtaPersistModule(
                 connectionInfo.getPersistenceUnitName(),
-                options,
                 connectionInfo,
                 emAnno);
 

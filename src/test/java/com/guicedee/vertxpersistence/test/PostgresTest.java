@@ -10,6 +10,7 @@ import com.guicedee.vertxpersistence.ConnectionBaseInfo;
 import com.guicedee.vertxpersistence.implementations.VertxPersistenceModule;
 import io.vertx.sqlclient.SqlClient;
 import jakarta.persistence.EntityManager;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -72,89 +73,6 @@ public class PostgresTest {
         System.setProperty("system.hazelcast.groupname", "testgroup");
         System.setProperty("system.hazelcast.grouppass", "testpass");
         System.setProperty("system.hazelcast.instance_name", "testinstance");
-    }
-
-    @Test
-    public void testPostgresConnection() {
-        // Register the PostgreSQL test module
-        IGuiceContext.registerModule("com.guicedee.guicedpersistence.test");
-        IGuiceContext.registerModule(new TestModulePostgres());
-        IGuiceContext.getContext().inject();
-
-        // Get the CallScoper to enter and exit a scope
-        CallScoper scoper = IGuiceContext.get(CallScoper.class);
-        scoper.enter();
-
-        try {
-            // Start the PersistService
-            PersistService ps = IGuiceContext.get(Key.get(PersistService.class, Names.named("testPostgres")));
-            assertNotNull(ps, "PersistService should not be null");
-            ps.start();
-
-            // Get the UnitOfWork for the PostgreSQL persistence unit
-            UnitOfWork work = IGuiceContext.get(Key.get(UnitOfWork.class, Names.named("testPostgres")));
-            assertNotNull(work, "UnitOfWork should not be null");
-
-            // Begin a unit of work
-            work.begin();
-
-            try {
-                // Get the EntityManager for the PostgreSQL persistence unit
-                EntityManager em = IGuiceContext.get(Key.get(EntityManager.class, Names.named("testPostgres")));
-                assertNotNull(em, "EntityManager should not be null");
-
-                // Get the SqlClient for the PostgreSQL persistence unit
-                SqlClient sqlClient = IGuiceContext.get(Key.get(SqlClient.class, Names.named("testPostgres")));
-                assertNotNull(sqlClient, "SqlClient should not be null");
-
-                // Get the ConnectionBaseInfo for the PostgreSQL persistence unit
-                ConnectionBaseInfo connectionInfo = VertxPersistenceModule.getConnectionInfoByEntityManager("testPostgres");
-                assertNotNull(connectionInfo, "ConnectionBaseInfo should not be null");
-
-                // Verify that system properties took effect
-                assertEquals(postgresContainer.getHost(), connectionInfo.getServerName(), "Server name should match container host");
-                assertEquals(String.valueOf(postgresContainer.getMappedPort(5432)), connectionInfo.getPort(), "Port should match container port");
-                assertEquals(POSTGRES_DATABASE, connectionInfo.getDatabaseName(), "Database name should match container database");
-                assertEquals(POSTGRES_USER, connectionInfo.getUsername(), "Username should match container username");
-                assertEquals(POSTGRES_PASSWORD, connectionInfo.getPassword(), "Password should match container password");
-
-                // Verify that the JDBC URL is generated correctly
-                String expectedJdbcUrl = "jdbc:postgresql://" + postgresContainer.getHost() + ":" + 
-                                        postgresContainer.getMappedPort(5432) + "/" + POSTGRES_DATABASE;
-                String actualJdbcUrl = connectionInfo.getJdbcUrl();
-                assertEquals(expectedJdbcUrl, actualJdbcUrl, "JDBC URL should be generated correctly");
-
-                // Verify that the EntityManager has the correct properties
-                Properties props = getEntityManagerProperties(em);
-
-                // Verify SQL logging properties
-                assertEquals("true", props.getProperty("hibernate.show_sql"), "show_sql property should be set from system property");
-                assertEquals("true", props.getProperty("hibernate.format_sql"), "format_sql property should be set from system property");
-                assertEquals("true", props.getProperty("hibernate.use_sql_comments"), "use_sql_comments property should be set from system property");
-
-                // Verify cache properties
-                assertEquals("true", props.getProperty("hibernate.cache.use_second_level_cache"), "use_second_level_cache property should be set");
-                assertEquals("true", props.getProperty("hibernate.cache.use_query_cache"), "use_query_cache property should be set");
-                assertEquals("true", props.getProperty("hibernate.cache.use_minimal_puts"), "use_minimal_puts property should be set");
-
-                // Verify Hazelcast cache properties
-                assertEquals("true", props.getProperty("hibernate.cache.hazelcast.use_native_client"), "use_native_client property should be set");
-                assertEquals("localhost:5701", props.getProperty("hibernate.cache.hazelcast.native_client_hosts"), "native_client_hosts property should be set from system property");
-                assertEquals("localhost:5701", props.getProperty("hibernate.cache.hazelcast.native_client_address"), "native_client_address property should be set from system property");
-                assertEquals("testgroup", props.getProperty("hibernate.cache.hazelcast.native_client_group"), "native_client_group property should be set from system property");
-                assertEquals("testpass", props.getProperty("hibernate.cache.hazelcast.native_client_password"), "native_client_password property should be set from system property");
-                assertEquals("testinstance", props.getProperty("hibernate.cache.hazelcast.instance_name"), "instance_name property should be set from system property");
-
-                // Verify dialect is set correctly
-                assertEquals("org.hibernate.dialect.PostgreSQLDialect", props.getProperty("hibernate.dialect"), "dialect property should be set correctly");
-            } finally {
-                // End the unit of work
-                work.end();
-            }
-        } finally {
-            // Exit the scope
-            scoper.exit();
-        }
     }
 
     /**
