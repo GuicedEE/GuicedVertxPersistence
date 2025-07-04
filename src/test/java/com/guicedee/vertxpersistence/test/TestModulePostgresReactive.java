@@ -3,6 +3,7 @@ package com.guicedee.vertxpersistence.test;
 import com.guicedee.vertxpersistence.ConnectionBaseInfo;
 import com.guicedee.vertxpersistence.implementations.postgres.PostgresConnectionBaseInfo;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
 import java.util.Properties;
 
@@ -18,7 +19,7 @@ public class TestModulePostgresReactive extends TestModulePostgres {
     }
 
     @Override
-    protected ConnectionBaseInfo getConnectionBaseInfo(ParsedPersistenceXmlDescriptor unit, Properties filteredProperties) {
+    protected ConnectionBaseInfo getConnectionBaseInfo(PersistenceUnitDescriptor unit, Properties filteredProperties) {
         PostgresConnectionBaseInfo connectionInfo = (PostgresConnectionBaseInfo) super.getConnectionBaseInfo(unit, filteredProperties);
         // Set reactive to true to test the reactive functionality
         connectionInfo.setReactive(true);

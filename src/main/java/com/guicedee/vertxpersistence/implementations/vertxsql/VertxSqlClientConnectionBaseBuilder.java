@@ -4,7 +4,8 @@ import com.guicedee.vertxpersistence.CleanVertxConnectionBaseInfo;
 import com.guicedee.vertxpersistence.ConnectionBaseInfo;
 import com.guicedee.vertxpersistence.ConnectionBaseInfoFactory;
 import com.guicedee.vertxpersistence.IPropertiesConnectionInfoReader;
-import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+
 
 import java.util.Properties;
 
@@ -16,7 +17,7 @@ public class VertxSqlClientConnectionBaseBuilder
         implements IPropertiesConnectionInfoReader<VertxSqlClientConnectionBaseBuilder>
 {
     @Override
-    public ConnectionBaseInfo populateConnectionBaseInfo(ParsedPersistenceXmlDescriptor unit, Properties filteredProperties, ConnectionBaseInfo cbi)
+    public ConnectionBaseInfo populateConnectionBaseInfo(PersistenceUnitDescriptor unit, Properties filteredProperties, ConnectionBaseInfo cbi)
     {
         // First populate the original ConnectionBaseInfo
         for (String prop : filteredProperties.stringPropertyNames())

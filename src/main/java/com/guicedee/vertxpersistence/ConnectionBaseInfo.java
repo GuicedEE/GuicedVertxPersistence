@@ -3,12 +3,12 @@ package com.guicedee.vertxpersistence;
 import com.fasterxml.jackson.annotation.*;
 import com.google.common.base.Strings;
 import com.guicedee.client.IGuiceContext;
+import io.vertx.sqlclient.SqlClient;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
-import io.vertx.sqlclient.SqlClient;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -36,7 +36,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
 @ToString(exclude = {"password"})
-@EqualsAndHashCode(of = {"persistenceUnitName", "driver"})
+@EqualsAndHashCode(of = {"persistenceUnitName"})
 public abstract class ConnectionBaseInfo
 {
 	/**
@@ -104,7 +104,7 @@ public abstract class ConnectionBaseInfo
 		serverInstanceNameProperty = "Instance";
 	}
 
-	public ConnectionBaseInfo populateFromProperties(ParsedPersistenceXmlDescriptor unit, Properties filteredProperties)
+	public ConnectionBaseInfo populateFromProperties(PersistenceUnitDescriptor unit, Properties filteredProperties)
 	{
 		for (IPropertiesConnectionInfoReader<?> connectionInfoReader : IGuiceContext
 				.instance()

@@ -1,7 +1,8 @@
 package com.guicedee.vertxpersistence;
 
 import com.guicedee.guicedinjection.interfaces.IDefaultService;
-import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+
 
 import java.util.Properties;
 
@@ -24,5 +25,5 @@ public interface IPropertiesConnectionInfoReader<J extends IPropertiesConnection
 	 *
 	 * @return ConnectionBaseInfo
 	 */
-	ConnectionBaseInfo populateConnectionBaseInfo(ParsedPersistenceXmlDescriptor unit, Properties filteredProperties, ConnectionBaseInfo cbi);
+	ConnectionBaseInfo populateConnectionBaseInfo(PersistenceUnitDescriptor unit, Properties filteredProperties, ConnectionBaseInfo cbi);
 }

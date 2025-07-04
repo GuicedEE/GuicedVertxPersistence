@@ -4,7 +4,8 @@ package com.guicedee.vertxpersistence.implementations.hibernateproperties;
 import com.google.common.base.Strings;
 import com.guicedee.vertxpersistence.ConnectionBaseInfo;
 import com.guicedee.vertxpersistence.IPropertiesConnectionInfoReader;
-import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+
 
 import java.util.Properties;
 
@@ -16,7 +17,7 @@ public class HibernateDefaultConnectionBaseBuilder
 {
 
     @Override
-    public ConnectionBaseInfo populateConnectionBaseInfo(ParsedPersistenceXmlDescriptor unit, Properties filteredProperties, ConnectionBaseInfo cbi)
+    public ConnectionBaseInfo populateConnectionBaseInfo(PersistenceUnitDescriptor unit, Properties filteredProperties, ConnectionBaseInfo cbi)
     {
         if (cbi.getPersistenceUnitName() == null)
         {

@@ -5,6 +5,7 @@ import com.guicedee.vertxpersistence.ConnectionBaseInfo;
 import com.guicedee.vertxpersistence.ConnectionBaseInfoBuilder;
 import com.guicedee.vertxpersistence.DatabaseModule;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
 import java.util.Properties;
 
@@ -18,7 +19,7 @@ public class TestModule1 extends DatabaseModule<TestModule1>
 	}
 	
 	@Override
-	protected ConnectionBaseInfo getConnectionBaseInfo(ParsedPersistenceXmlDescriptor unit, Properties filteredProperties)
+	protected ConnectionBaseInfo getConnectionBaseInfo(PersistenceUnitDescriptor unit, Properties filteredProperties)
 	{
 		ConnectionBaseInfoBuilder connectionBuilder = new ConnectionBaseInfoBuilder();
 		return connectionBuilder.populateConnectionBaseInfo(unit,filteredProperties,new CleanVertxConnectionBaseInfo());

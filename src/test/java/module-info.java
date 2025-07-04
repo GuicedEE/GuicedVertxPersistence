@@ -10,7 +10,7 @@ open module guiced.vertx.persistence.test {
     requires io.vertx.sql.client;
     requires io.vertx.sql.client.pg;
     //jdbc
-    requires org.postgresql.jdbc;
+    //requires org.postgresql.jdbc;
 
 
     requires jakarta.persistence;

@@ -38,6 +38,12 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-pg-client</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.ongres.scram</groupId>
+                    <artifactId>scram-client</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -142,7 +148,6 @@
         <dependency>
             <groupId>io.smallrye.reactive</groupId>
             <artifactId>mutiny</artifactId>
-            <version>2.8.0</version>
         </dependency>
 
         <dependency>
@@ -150,11 +155,11 @@
             <artifactId>jakarta.transaction-api</artifactId>
         </dependency>
 
-        <dependency>
+<!--        <dependency>
             <groupId>com.guicedee.services</groupId>
             <artifactId>postgresql</artifactId>
             <scope>test</scope>
-        </dependency>
+        </dependency>-->
 
     </dependencies>
 
@@ -204,6 +209,13 @@
             <dependency>
                 <groupId>com.guicedee</groupId>
                 <artifactId>guicedee-bom</artifactId>
+                <version>${guicedee.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>com.guicedee</groupId>
+                <artifactId>standalone-bom</artifactId>
                 <version>${guicedee.version}</version>
                 <scope>import</scope>
                 <type>pom</type>

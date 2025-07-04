@@ -4,6 +4,7 @@ import com.guicedee.vertxpersistence.ConnectionBaseInfo;
 import com.guicedee.vertxpersistence.DatabaseModule;
 import com.guicedee.vertxpersistence.implementations.postgres.PostgresConnectionBaseInfo;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
 import java.util.Properties;
 
@@ -40,7 +41,7 @@ public class TestModulePostgres extends DatabaseModule<TestModulePostgres>
     }
 
     @Override
-    protected ConnectionBaseInfo getConnectionBaseInfo(ParsedPersistenceXmlDescriptor unit, Properties filteredProperties) {
+    protected ConnectionBaseInfo getConnectionBaseInfo(PersistenceUnitDescriptor unit, Properties filteredProperties) {
         PostgresConnectionBaseInfo connectionInfo = new PostgresConnectionBaseInfo();
         connectionInfo.setServerName(POSTGRES_HOST);
         connectionInfo.setPort(String.valueOf(POSTGRES_PORT));

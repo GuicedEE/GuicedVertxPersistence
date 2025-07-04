@@ -3,7 +3,8 @@ package com.guicedee.vertxpersistence.implementations.systemproperties;
 import com.google.common.base.Strings;
 import com.guicedee.vertxpersistence.IPropertiesEntityManagerReader;
 import lombok.extern.java.Log;
-import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +35,7 @@ public class SystemEnvironmentVariablesPropertiesReader
     private static final Pattern directPattern = Pattern.compile(DIRECT_PATTERN);
 
     @Override
-    public Map<String, String> processProperties(ParsedPersistenceXmlDescriptor persistenceUnit, Properties incomingProperties)
+    public Map<String, String> processProperties(PersistenceUnitDescriptor persistenceUnit, Properties incomingProperties)
     {
         for (String prop : incomingProperties.stringPropertyNames())
         {
@@ -155,7 +156,7 @@ public class SystemEnvironmentVariablesPropertiesReader
     }
 
     @Override
-    public boolean applicable(ParsedPersistenceXmlDescriptor persistenceUnit)
+    public boolean applicable(PersistenceUnitDescriptor persistenceUnit)
     {
         return true;
     }

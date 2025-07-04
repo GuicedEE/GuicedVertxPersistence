@@ -1,7 +1,8 @@
 package com.guicedee.vertxpersistence.implementations.sqlserver;
 
 import com.guicedee.vertxpersistence.IPropertiesEntityManagerReader;
-import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +24,7 @@ public class SqlServerHibernateProperties implements IPropertiesEntityManagerRea
      * @return A map of additional properties to add
      */
     @Override
-    public Map<String, String> processProperties(ParsedPersistenceXmlDescriptor persistenceUnit, Properties incomingProperties) {
+    public Map<String, String> processProperties(PersistenceUnitDescriptor persistenceUnit, Properties incomingProperties) {
         Map<String, String> props = new HashMap<>();
 
         // Set SQL Server dialect if not already set
@@ -95,7 +96,7 @@ public class SqlServerHibernateProperties implements IPropertiesEntityManagerRea
      * @return true if this properties reader is applicable, false otherwise
      */
     @Override
-    public boolean applicable(ParsedPersistenceXmlDescriptor persistenceUnit) {
+    public boolean applicable(PersistenceUnitDescriptor persistenceUnit) {
         // Check if the persistence unit is using SQL Server
         Properties props = persistenceUnit.getProperties();
         
