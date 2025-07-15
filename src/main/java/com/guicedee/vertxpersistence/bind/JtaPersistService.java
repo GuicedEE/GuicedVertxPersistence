@@ -16,21 +16,11 @@
 
 package com.guicedee.vertxpersistence.bind;
 
-import com.google.common.base.Preconditions;
-import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.google.inject.Singleton;
-import com.google.inject.persist.PersistService;
-import com.google.inject.persist.UnitOfWork;
-import com.guicedee.client.IGuiceContext;
-import com.guicedee.guicedservlets.servlets.services.scopes.CallScope;
-import com.guicedee.client.CallScopeProperties;
-import jakarta.persistence.EntityManager;
+import com.guicedee.vertxpersistence.PersistService;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import lombok.Getter;
-import org.hibernate.reactive.loader.ast.internal.ReactiveAbstractCollectionBatchLoader;
-import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.Map;
 

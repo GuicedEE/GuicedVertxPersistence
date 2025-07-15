@@ -19,8 +19,7 @@ package com.guicedee.vertxpersistence.bind;
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
-import com.google.inject.persist.PersistService;
-import com.google.inject.persist.UnitOfWork;
+import com.guicedee.vertxpersistence.PersistService;
 
 import java.lang.reflect.Method;
 
@@ -37,8 +36,7 @@ public abstract class PersistModule extends AbstractModule
         super.configure();
         configurePersistence();
 
-        requireBinding(PersistService.class);
-        requireBinding(UnitOfWork.class);
+       requireBinding(PersistService.class);
       /*  MethodInterceptor transactionInterceptor = getTransactionInterceptor();
 
         if (InternalFlags.isBytecodeGenEnabled())

@@ -31,18 +31,14 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
      * Constructor DatabaseModule creates a new DatabaseModule instance.
      */
     public DatabaseModule() {
-        if (PersistenceUnitDescriptors.size() > 0) {
-            var parser = PersistenceXmlParser.create(Map.of(), null, null);
-            var urls = parser.getClassLoaderService().locateResources("META-INF/persistence.xml");
-            if (urls.isEmpty()) {
-                return;
-            }
-            for (var desc : PersistenceUnitDescriptors) {
-                if (!(desc.getProperties().containsKey("guice.ignore") && "true".equals(desc.getProperties().get("guice.ignore")))) {
-                    log.debug("PU Found : " + desc.getName());
-                    PersistenceUnitDescriptors.add(desc);
-                }
-            }
+        var parser = PersistenceXmlParser.create(Map.of(), null, null);
+        var urls = parser.getClassLoaderService().locateResources("META-INF/persistence.xml");
+        if (urls.isEmpty()) {
+            return;
+        }
+        PersistenceUnitDescriptors.addAll(parser.parse(urls).values());
+        for (var desc : PersistenceUnitDescriptors) {
+            log.debug("PU Found : " + desc.getName());
         }
     }
 
@@ -74,7 +70,9 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
         try {
             ConnectionBaseInfo connectionBaseInfo = getConnectionBaseInfo(pu, jdbcProperties);
             connectionBaseInfo.populateFromProperties(pu, jdbcProperties);
-            jdbcProperties.put("hibernate.connection.url", connectionBaseInfo.getJdbcUrl());
+            String jdbcUrl = connectionBaseInfo.getJdbcUrl();
+            jdbcProperties.put("hibernate.connection.url", jdbcUrl);
+            connectionBaseInfo.setUrl(jdbcUrl);
 
             if (connectionBaseInfo.getJndiName() == null) {
                 connectionBaseInfo.setJndiName(getJndiMapping());

@@ -3,7 +3,6 @@ package com.guicedee.vertxpersistence.implementations;
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
-import com.google.inject.persist.UnitOfWork;
 import com.guicedee.client.IGuiceContext;
 import com.guicedee.guicedinjection.interfaces.IGuiceModule;
 import com.guicedee.vertxpersistence.ConnectionBaseInfo;
@@ -229,17 +228,17 @@ public class VertxPersistenceModule extends AbstractModule implements IGuiceModu
                     .to(Key.get(jakarta.persistence.EntityManager.class, Names.named(defaultConnectionInfo.getPersistenceUnitName())));
 
             // Bind the default UnitOfWork for @Inject @EntityManager UnitOfWork
-            bind(UnitOfWork.class)
-                    .to(Key.get(UnitOfWork.class, Names.named(defaultConnectionInfo.getPersistenceUnitName())));
+            /*bind(UnitOfWork.class)
+                    .to(Key.get(UnitOfWork.class, Names.named(defaultConnectionInfo.getPersistenceUnitName())));*/
         }
         bind(jakarta.persistence.EntityManager.class)
                 .annotatedWith(EntityManager.class)
                 .to(Key.get(jakarta.persistence.EntityManager.class, Names.named(defaultConnectionInfo.getPersistenceUnitName())));
 
         // Bind the default UnitOfWork for @Inject @EntityManager UnitOfWork
-        bind(UnitOfWork.class)
+/*        bind(UnitOfWork.class)
                 .annotatedWith(EntityManager.class)
-                .to(Key.get(UnitOfWork.class, Names.named(defaultConnectionInfo.getPersistenceUnitName())));
+                .to(Key.get(UnitOfWork.class, Names.named(defaultConnectionInfo.getPersistenceUnitName())));*/
     }
 
     private String getAnnotationValue(AnnotationInfo annotationInfo)

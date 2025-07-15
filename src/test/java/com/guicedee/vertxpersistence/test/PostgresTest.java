@@ -1,27 +1,14 @@
 package com.guicedee.vertxpersistence.test;
 
-import com.google.inject.Key;
-import com.google.inject.name.Names;
-import com.google.inject.persist.PersistService;
-import com.google.inject.persist.UnitOfWork;
-import com.guicedee.client.CallScoper;
-import com.guicedee.client.IGuiceContext;
-import com.guicedee.vertxpersistence.ConnectionBaseInfo;
-import com.guicedee.vertxpersistence.implementations.VertxPersistenceModule;
-import io.vertx.sqlclient.SqlClient;
 import jakarta.persistence.EntityManager;
-import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.Map;
 import java.util.Properties;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test class for PostgreSQL integration with Vertx.

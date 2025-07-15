@@ -24,6 +24,7 @@ import java.util.function.Supplier;
  * @param <T> The generic type parameter for the result of the {@link Callable}.
  */
 @Slf4j
+@Deprecated(since = "2025-07-14", forRemoval = true)
 public class TransactionalCallable<T> implements Callable<T> {
 
     /**

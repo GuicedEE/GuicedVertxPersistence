@@ -63,7 +63,7 @@ public class PostgresHibernateProperties implements IPropertiesEntityManagerRead
         // Set the schema generation tool for PostgreSQL
         if (!incomingProperties.containsKey("hibernate.hbm2ddl.auto") && 
             !incomingProperties.containsKey("jakarta.persistence.schema-generation.database.action")) {
-            incomingProperties.put("hibernate.hbm2ddl.auto", "update");
+            incomingProperties.put("hibernate.hbm2ddl.auto", "none");
         }
 
         return props;

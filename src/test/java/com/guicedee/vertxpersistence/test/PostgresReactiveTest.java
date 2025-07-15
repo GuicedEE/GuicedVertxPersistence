@@ -2,15 +2,12 @@ package com.guicedee.vertxpersistence.test;
 
 import com.google.inject.Key;
 import com.google.inject.name.Names;
-import com.google.inject.persist.PersistService;
-import com.google.inject.persist.UnitOfWork;
 import com.guicedee.client.CallScoper;
 import com.guicedee.client.IGuiceContext;
 import com.guicedee.vertx.spi.VertXPreStartup;
 import com.guicedee.vertxpersistence.ConnectionBaseInfo;
+import com.guicedee.vertxpersistence.PersistService;
 import com.guicedee.vertxpersistence.bind.JtaPersistService;
-import com.guicedee.vertxpersistence.bind.ReactiveUnitOfWork;
-import com.guicedee.vertxpersistence.implementations.VertxPersistenceModule;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
@@ -31,13 +28,12 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Test class for PostgreSQL reactive integration with Vertx.
  * This test verifies that:
- * 1. When reactive is set to true, UnitOfWork is bound to JtaUnitOfWork
- * 2. JtaUnitOfWork uses Mutiny.Session for reactive connections
+ * 1. Mutiny.SessionFactory is properly bound and available
+ * 2. Mutiny.SessionFactory can be used to open sessions and execute queries
  */
 @Testcontainers
 @Slf4j
-public class PostgresReactiveTest
-{
+public class PostgresReactiveTest {
 
 
     // Create a PostgreSQL container with the defined values
@@ -48,8 +44,7 @@ public class PostgresReactiveTest
             .withPassword(POSTGRES_PASSWORD);
 
     @BeforeAll
-    public static void setup()
-    {
+    public static void setup() {
         // Set system properties for logging
         System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "fine");
 
@@ -76,76 +71,79 @@ public class PostgresReactiveTest
     }
 
     @Test
-    public void testReactivePostgresConnection()
-    {
+    public void testReactivePostgresConnection() {
         // Register the PostgreSQL reactive test module
         IGuiceContext.registerModule("com.guicedee.guicedpersistence.test");
         IGuiceContext.registerModule(new TestModulePostgresReactive());
         IGuiceContext.getContext().inject();
 
         // Get the CallScoper to enter and exit a scope
-        CallScoper scoper = IGuiceContext.get(CallScoper.class);
-        scoper.enter();
+      //  CallScoper scoper = IGuiceContext.get(CallScoper.class);
+       // scoper.enter();
 
-        try
-        {
-            // Start the PersistService
+        try {
+            // Get the PersistService from Guice
+            log.info("Attempting to get PersistService from Guice");
             JtaPersistService ps = (JtaPersistService) IGuiceContext.get(Key.get(PersistService.class, Names.named("testPostgresReactive")));
             assertNotNull(ps, "PersistService should not be null");
             ps.start();
 
-            // Get the UnitOfWork for the PostgreSQL persistence unit
-            ReactiveUnitOfWork work = (ReactiveUnitOfWork) IGuiceContext.get(Key.get(UnitOfWork.class, Names.named("testPostgresReactive")));
-            assertNotNull(work, "UnitOfWork should not be null");
+            // Get the SessionFactory from Guice
+            log.info("Attempting to get SessionFactory from Guice");
+            Mutiny.SessionFactory sessionFactory = IGuiceContext.get(Key.get(Mutiny.SessionFactory.class, Names.named("testPostgresReactive")));
+            assertNotNull(sessionFactory, "SessionFactory should not be null");
+            log.info("Successfully got SessionFactory from Guice");
 
-            // Verify that UnitOfWork is an instance of JtaUnitOfWork
-            assertTrue(work instanceof ReactiveUnitOfWork, "UnitOfWork should be an instance of JtaUnitOfWork for reactive connections");
+            // Test the session factory
+            VertXPreStartup.getVertx().runOnContext(handle -> {
+                // Test opening a session
+                log.info("Before opening session manually");
+                sessionFactory.openSession()
+                        .onItemOrFailure().invoke((session, error) -> {
+                            if (error != null) {
+                                fail("Error occurred while opening a session", error);
+                            } else {
+                                log.info("Session opened successfully");
+                            }
+                            // Ensure session is closed
+                            log.info("Closing session manually");
+                            session.close();
+                            log.info("Session closed manually");
+                        })
+                        .onFailure().invoke(error -> fail("Error occurred while opening a session", error))
+                        .await().atMost(Duration.of(50, ChronoUnit.SECONDS));
+                log.info("After manual session test");
 
-            VertXPreStartup.getVertx().runOnContext(handle->{
-                 Mutiny.SessionFactory sessionFactory = IGuiceContext.get(Mutiny.SessionFactory.class);
-                 sessionFactory.openSession()
-                         .onItemOrFailure().invoke((session, error) -> {
-                     if (error != null)
-                     {
-                         fail("Error occurred while opening a session", error);
-                     }
-                     else
-                     {
-                         log.info("Session opened successfully");
-                     }
-                     session.close();
-                 })
-                         .onFailure().invoke(error -> fail("Error occurred while opening a session", error))
-                         .await().atMost(Duration.of(50, ChronoUnit.SECONDS));
+                // Test executing a query
+                log.info("Before withSession test");
                 sessionFactory.withSession(session -> {
+                            log.info("Inside withSession, session is open");
                             session.withTransaction(tx -> {
+                                        log.info("Inside withTransaction, transaction is active");
                                         session.createNativeQuery("SELECT 1")
                                                 .getResultList()
                                                 .onItemOrFailure()
                                                 .invoke((result, error) -> {
-                                                    if (error != null)
-                                                    {
+                                                    if (error != null) {
                                                         fail("Error occurred while executing a native query", error);
-                                                    }
-                                                    else
-                                                    {
+                                                    } else {
                                                         log.info("Native query result: {}", result);
                                                     }
                                                 });
+                                        log.info("Exiting withTransaction, transaction will be committed");
                                         return null;
                                     })
                                     .onFailure().invoke(error -> fail("Error occurred while executing a transaction", error));
+                            log.info("Exiting withSession, session will be closed automatically");
                             return null;
                         }).onFailure().invoke(error -> fail("Error occurred while creating a session", error))
                         .await().atMost(Duration.of(50, ChronoUnit.SECONDS));
-                sessionFactory.close();
+                log.info("After withSession test");
             });
 
-        }
-        finally
-        {
+        } finally {
             // Exit the scope
-            scoper.exit();
+         //   scoper.exit();
         }
     }
 

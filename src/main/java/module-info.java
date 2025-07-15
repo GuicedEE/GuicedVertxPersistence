@@ -2,7 +2,13 @@ import com.guicedee.guicedinjection.interfaces.IGuiceConfigurator;
 import com.guicedee.vertxpersistence.IPropertiesConnectionInfoReader;
 import com.guicedee.vertxpersistence.IPropertiesEntityManagerReader;
 import com.guicedee.vertxpersistence.implementations.GuicedConfigurator;
+import com.guicedee.vertxpersistence.implementations.db2.DB2ConnectionBaseInfo;
+import com.guicedee.vertxpersistence.implementations.db2.DB2HibernateProperties;
 import com.guicedee.vertxpersistence.implementations.hibernateproperties.HibernateEntityManagerProperties;
+import com.guicedee.vertxpersistence.implementations.mysql.MySqlHibernateProperties;
+import com.guicedee.vertxpersistence.implementations.oracle.OracleHibernateProperties;
+import com.guicedee.vertxpersistence.implementations.postgres.PostgresHibernateProperties;
+import com.guicedee.vertxpersistence.implementations.sqlserver.SqlServerHibernateProperties;
 import com.guicedee.vertxpersistence.implementations.systemproperties.SystemEnvironmentVariablesPropertiesReader;
 import org.hibernate.service.spi.ServiceContributor;
 
@@ -19,12 +25,10 @@ module com.guicedee.vertxpersistence {
     exports com.guicedee.vertxpersistence.implementations.oracle;
     exports com.guicedee.vertxpersistence.implementations.vertxsql;
 
-    exports com.google.inject.persist;
-
     requires transitive org.hibernate.reactive;
     requires static com.guicedee.rest;
 
-    requires com.guicedee.vertx;
+    requires transitive com.guicedee.vertx;
 
     requires org.slf4j;
 
@@ -37,18 +41,21 @@ module com.guicedee.vertxpersistence {
     requires transitive com.guicedee.microprofile.config;
 
     requires transitive io.smallrye.mutiny;
-
     requires transitive com.ongres.scram.client;
-
-
     requires static io.vertx.sql.client.pg;
 
     uses com.guicedee.vertxpersistence.IPropertiesConnectionInfoReader;
     uses com.guicedee.vertxpersistence.IPropertiesEntityManagerReader;
 
     provides IGuiceConfigurator with GuicedConfigurator;
-    provides IPropertiesEntityManagerReader with SystemEnvironmentVariablesPropertiesReader, HibernateEntityManagerProperties;
-    provides IPropertiesConnectionInfoReader with com.guicedee.vertxpersistence.implementations.hibernateproperties.HibernateDefaultConnectionBaseBuilder;
+    provides IPropertiesEntityManagerReader with SystemEnvironmentVariablesPropertiesReader, HibernateEntityManagerProperties,
+            DB2HibernateProperties,
+            MySqlHibernateProperties,
+            OracleHibernateProperties,
+            PostgresHibernateProperties,
+            SqlServerHibernateProperties;
+    provides IPropertiesConnectionInfoReader with com.guicedee.vertxpersistence.implementations.hibernateproperties.HibernateDefaultConnectionBaseBuilder
+            ;
 
     provides ServiceContributor with com.guicedee.vertxpersistence.implementations.VertxServiceContributor;
 

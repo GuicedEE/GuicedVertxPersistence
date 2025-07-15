@@ -1,9 +1,14 @@
+import com.guicedee.vertxpersistence.DatabaseModule;
+import com.guicedee.vertxpersistence.test.TestModulePostgresReactive;
+
 open module guiced.vertx.persistence.test {
 
     requires com.google.guice;
-    requires org.testcontainers;
+    requires transitive org.testcontainers;
     requires transitive com.guicedee.vertxpersistence;
+    requires transitive com.sun.jna;
 
+    provides DatabaseModule with TestModulePostgresReactive;
 
 
     //reactive
@@ -18,7 +23,7 @@ open module guiced.vertx.persistence.test {
     requires org.junit.jupiter.api;
     requires org.slf4j;
 
-    requires transitive junit;
+    requires junit;
     requires static lombok;
     //requires io.smallrye.mutiny.vertx.core;
 }
