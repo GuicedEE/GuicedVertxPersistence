@@ -1,11 +1,18 @@
 package com.guicedee.vertxpersistence;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import com.guicedee.client.IGuiceContext;
+import com.guicedee.guicedinjection.GuiceContext;
 import com.guicedee.guicedinjection.interfaces.IGuiceModule;
+import com.guicedee.guicedinjection.interfaces.IGuicePostStartup;
+import com.guicedee.guicedinjection.interfaces.IGuicePreDestroy;
 import com.guicedee.vertxpersistence.annotations.EntityManager;
 import com.guicedee.vertxpersistence.bind.JtaPersistModule;
+import com.guicedee.vertxpersistence.bind.JtaPersistService;
 import com.guicedee.vertxpersistence.implementations.VertxPersistenceModule;
+import io.vertx.core.Future;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.log4j.Log4j2;
 
@@ -23,7 +30,8 @@ import java.util.*;
 @EntityManager
 public abstract class DatabaseModule<J extends DatabaseModule<J>>
         extends AbstractModule
-        implements IGuiceModule<J> {
+        implements IGuiceModule<J>,
+        IGuicePostStartup<J>, IGuicePreDestroy<J> {
 
     private static final List<PersistenceUnitDescriptor> PersistenceUnitDescriptors = new ArrayList<>();
 
@@ -38,8 +46,27 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
         }
         PersistenceUnitDescriptors.addAll(parser.parse(urls).values());
         for (var desc : PersistenceUnitDescriptors) {
-            log.debug("PU Found : " + desc.getName());
+            log.debug("PU Found : {}", desc.getName());
         }
+        GuiceContext.instance().loadPostStartupServices().add(this);
+        GuiceContext.instance().loadPreDestroyServices().add(this);
+    }
+
+    @Override
+    public List<Future<Boolean>> postLoad() {
+        return List.of(getVertx().executeBlocking(() -> {
+            log.info("PersistService starting");
+            JtaPersistService ps = (JtaPersistService) IGuiceContext.get(Key.get(PersistService.class, Names.named("ActivityMaster-Test")));
+            ps.start();
+            log.info("PersistService started");
+            return true;
+        }));
+    }
+
+    @Override
+    public void onDestroy() {
+        IGuiceContext.get(Key.get(PersistService.class, Names.named("ActivityMaster-Test"))).stop();
+        log.info("PersistService stopped");
     }
 
     /**
@@ -47,12 +74,11 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
      */
     @Override
     protected void configure() {
-        DatabaseModule.log.debug("Loading Database Module - " + getClass().getName() + " - " + getPersistenceUnitName());
+        log.debug("Loading Database Module - {} - {}", getClass().getName(), getPersistenceUnitName());
         Properties jdbcProperties = getJDBCPropertiesMap();
         PersistenceUnitDescriptor pu = getPersistenceUnit();
         if (pu == null) {
-            DatabaseModule.log
-                    .error("Unable to register persistence unit with name " + getPersistenceUnitName() + " - No persistence unit containing this name was found.");
+            log.error("Unable to register persistence unit with name {} - No persistence unit containing this name was found.", getPersistenceUnitName());
             return;
         }
         for (IPropertiesEntityManagerReader<?> entityManagerReader : IGuiceContext
@@ -77,8 +103,7 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
             if (connectionBaseInfo.getJndiName() == null) {
                 connectionBaseInfo.setJndiName(getJndiMapping());
             }
-            log.info(String.format("%s - Connection Base Info Final - %s",
-                    getPersistenceUnitName(), connectionBaseInfo));
+            log.info("{} - Connection Base Info Final - {}", getPersistenceUnitName(), connectionBaseInfo);
             connectionBaseInfo.setPersistenceUnitName(getPersistenceUnitName());
             var emAnnos = getClass().getAnnotationsByType(EntityManager.class);
             if (emAnnos.length > 0) {
@@ -87,10 +112,10 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
                 install(jpaModule);
                 VertxPersistenceModule.getConnectionModules().put(connectionBaseInfo, jpaModule);
             } else {
-                throw new Exception("No EntityManager annotation found on class " + getClass().getName());
+                throw new Exception(String.format("No EntityManager annotation found on class %s", getClass().getName()));
             }
         } catch (Throwable T) {
-            log.error("Unable to load DB Module [" + pu.getName() + "] - " + T.getMessage(), T);
+            log.error("Unable to load DB Module [{}] - {}", pu.getName(), T.getMessage(), T);
         }
     }
 
@@ -161,7 +186,7 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
                     jdbcProperties.put(key, value);
                 }
             } catch (Throwable t) {
-                log.error("Unable to load persistence unit properties for [" + pu.getName() + "]", t);
+                log.error("Unable to load persistence unit properties for [{}]", pu.getName(), t);
             }
         }
     }

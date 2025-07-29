@@ -26,9 +26,10 @@ module com.guicedee.vertxpersistence {
     exports com.guicedee.vertxpersistence.implementations.vertxsql;
 
     requires transitive org.hibernate.reactive;
-    requires static com.guicedee.rest;
-
     requires transitive com.guicedee.vertx;
+    requires transitive com.guicedee.guicedinjection;
+
+    requires static com.guicedee.rest;
 
     requires org.slf4j;
 
