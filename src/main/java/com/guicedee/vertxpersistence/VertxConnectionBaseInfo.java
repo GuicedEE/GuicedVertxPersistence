@@ -3,11 +3,10 @@ package com.guicedee.vertxpersistence;
 import com.guicedee.client.IGuiceContext;
 import com.guicedee.vertx.spi.VertXPreStartup;
 import io.vertx.core.Vertx;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.logging.Level;
 
 import io.vertx.sqlclient.SqlClient;
 
@@ -16,7 +15,7 @@ import io.vertx.sqlclient.SqlClient;
  * Exists to specify the default properties for connections that a jtm should implement should btm be switched for a different
  * implementation
  */
-@Slf4j
+@Log4j2
 public class VertxConnectionBaseInfo
 		extends ConnectionBaseInfo
 {

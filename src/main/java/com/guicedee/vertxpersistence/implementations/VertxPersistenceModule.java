@@ -13,7 +13,7 @@ import io.github.classgraph.PackageInfo;
 import io.github.classgraph.ScanResult;
 import io.vertx.sqlclient.SqlClient;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
@@ -21,7 +21,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-@Slf4j
+@Log4j2
 public class VertxPersistenceModule extends AbstractModule implements IGuiceModule<VertxPersistenceModule>
 {
     @Getter
@@ -59,7 +59,7 @@ public class VertxPersistenceModule extends AbstractModule implements IGuiceModu
         JtaPersistModule defaultModule = null;
 
         // Now process all the ConnectionBaseInfo objects from the connectionModules map
-        log.debug("Processing ConnectionBaseInfo objects from connectionModules map");
+        log.debug("📋 Processing ConnectionBaseInfo objects from connectionModules map");
         for (Map.Entry<ConnectionBaseInfo, JtaPersistModule> entry : connectionModules.entrySet())
         {
             ConnectionBaseInfo connectionInfo = entry.getKey();
@@ -103,7 +103,7 @@ public class VertxPersistenceModule extends AbstractModule implements IGuiceModu
         }
 
         // Process package-level annotations for EntityManager
-        log.debug("Processing package-level EntityManager annotations");
+        log.debug("📋 Processing package-level EntityManager annotations");
         for (PackageInfo packageInfo : scanResult.getPackageInfo())
         {
             AnnotationInfo annotationInfo = packageInfo.getAnnotationInfo(EntityManager.class.getName());
@@ -111,7 +111,7 @@ public class VertxPersistenceModule extends AbstractModule implements IGuiceModu
             {
                 String emName = getAnnotationValue(annotationInfo);
                 boolean isDefault = getAnnotationDefaultEm(annotationInfo);
-                log.info("Found package-level EntityManager annotation: " + packageInfo.getName() + " with value: " + emName);
+                log.info("🔍 Found package-level EntityManager annotation: {} with value: {}", packageInfo.getName(), emName);
 
                 // Check if this entity manager name is already in use
                 if (!entityManagerAnnotations.containsKey(emName))

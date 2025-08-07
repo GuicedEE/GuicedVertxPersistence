@@ -6,6 +6,9 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.reactive.vertx.VertxInstance;
 import org.hibernate.service.spi.ServiceContributor;
 
+/**
+ * Provides the Vert.x instance to hibernate reactive
+ */
 public class VertxServiceContributor implements ServiceContributor
 {
     @Override

@@ -6,7 +6,7 @@ import com.guicedee.client.IGuiceContext;
 import io.vertx.sqlclient.SqlClient;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
 import java.util.HashMap;
@@ -34,7 +34,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 		setterVisibility = NONE)
 @JsonInclude(NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Slf4j
+@Log4j2
 @ToString(exclude = {"password"})
 @EqualsAndHashCode(of = {"persistenceUnitName"})
 public abstract class ConnectionBaseInfo

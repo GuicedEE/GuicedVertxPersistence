@@ -3,11 +3,10 @@ package com.guicedee.vertxpersistence;
 import com.guicedee.client.IGuiceContext;
 import com.guicedee.vertx.spi.VertXPreStartup;
 import io.vertx.core.Vertx;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.logging.Level;
 
 import io.vertx.sqlclient.SqlClient;
 
@@ -15,7 +14,7 @@ import io.vertx.sqlclient.SqlClient;
  * A clean implementation of VertxConnectionBaseInfo that uses the CleanConnectionBaseInfo interface.
  * This class provides a cleaner interface for configuring Vertx SQL client connections.
  */
-@Slf4j
+@Log4j2
 public class CleanVertxConnectionBaseInfo extends CleanConnectionBaseInfo {
 
     /**

@@ -11,7 +11,7 @@ import com.guicedee.vertxpersistence.bind.JtaPersistService;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * 2. Mutiny.SessionFactory can be used to open sessions and execute queries
  */
 @Testcontainers
-@Slf4j
+@Log4j2
 public class PostgresReactiveTest {
 
 

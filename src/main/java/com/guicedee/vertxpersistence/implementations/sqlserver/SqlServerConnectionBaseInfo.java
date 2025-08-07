@@ -5,17 +5,16 @@ import com.guicedee.vertx.spi.VertXPreStartup;
 import com.guicedee.vertxpersistence.CleanVertxConnectionBaseInfo;
 import io.vertx.core.Vertx;
 import io.vertx.sqlclient.SqlClient;
-import lombok.extern.java.Log;
+import lombok.extern.log4j.Log4j2;
 
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.logging.Level;
 
 /**
  * A specialized ConnectionBaseInfo implementation for Microsoft SQL Server.
  * This class provides SQL Server-specific configuration options for Vertx SQL client.
  */
-@Log
+@Log4j2
 public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
 
     /**
@@ -54,7 +53,7 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                 mssqlConnectOptionsClass = Class.forName("io.vertx.mssqlclient.MSSQLConnectOptions");
                 connectOptions = mssqlConnectOptionsClass.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
-                log.log(Level.SEVERE, "Error creating MSSQLConnectOptions", e);
+                log.error("Error creating MSSQLConnectOptions", e);
                 return null;
             }
 
@@ -64,7 +63,7 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                     Method setHostMethod = mssqlConnectOptionsClass.getMethod("setHost", String.class);
                     setHostMethod.invoke(connectOptions, getServerName());
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, "Error setting host for SQL Server connection", e);
+                    log.error("Error setting host for SQL Server connection", e);
                 }
             }
 
@@ -73,7 +72,7 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                     Method setPortMethod = mssqlConnectOptionsClass.getMethod("setPort", int.class);
                     setPortMethod.invoke(connectOptions, Integer.parseInt(getPort()));
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, "Error setting port for SQL Server connection", e);
+                    log.error("Error setting port for SQL Server connection", e);
                 }
             } else {
                 // Default SQL Server port
@@ -81,7 +80,7 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                     Method setPortMethod = mssqlConnectOptionsClass.getMethod("setPort", int.class);
                     setPortMethod.invoke(connectOptions, 1433);
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, "Error setting default port for SQL Server connection", e);
+                    log.error("Error setting default port for SQL Server connection", e);
                 }
             }
 
@@ -90,7 +89,7 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                     Method setDatabaseMethod = mssqlConnectOptionsClass.getMethod("setDatabase", String.class);
                     setDatabaseMethod.invoke(connectOptions, getDatabaseName());
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, "Error setting database for SQL Server connection", e);
+                    log.error("Error setting database for SQL Server connection", e);
                 }
             }
 
@@ -99,7 +98,7 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                     Method setUserMethod = mssqlConnectOptionsClass.getMethod("setUser", String.class);
                     setUserMethod.invoke(connectOptions, getUsername());
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, "Error setting user for SQL Server connection", e);
+                    log.error("Error setting user for SQL Server connection", e);
                 }
             }
 
@@ -108,7 +107,7 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                     Method setPasswordMethod = mssqlConnectOptionsClass.getMethod("setPassword", String.class);
                     setPasswordMethod.invoke(connectOptions, getPassword());
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, "Error setting password for SQL Server connection", e);
+                    log.error("Error setting password for SQL Server connection", e);
                 }
             }
 
@@ -119,7 +118,7 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                     // Convert seconds to milliseconds
                     setConnectTimeoutMethod.invoke(connectOptions, getAcquisitionTimeout() * 1000);
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, "Error setting connect timeout for SQL Server connection", e);
+                    log.error("Error setting connect timeout for SQL Server connection", e);
                 }
             }
 
@@ -130,7 +129,7 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                     // Convert seconds to milliseconds
                     setIdleTimeoutMethod.invoke(connectOptions, getMaxIdleTime() * 1000);
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, "Error setting idle timeout for SQL Server connection", e);
+                    log.error("Error setting idle timeout for SQL Server connection", e);
                 }
             }
 
@@ -141,9 +140,9 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                     Method setInstanceMethod = mssqlConnectOptionsClass.getMethod("setInstance", String.class);
                     setInstanceMethod.invoke(connectOptions, getInstanceName());
                 } catch (NoSuchMethodException e) {
-                    log.fine("setInstance method not found in MSSQLConnectOptions, skipping");
+                    log.debug("setInstance method not found in MSSQLConnectOptions, skipping");
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, "Error setting instance name for SQL Server connection", e);
+                    log.error("Error setting instance name for SQL Server connection", e);
                 }
             }
 
@@ -153,11 +152,11 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                     Method setPacketSizeMethod = mssqlConnectOptionsClass.getMethod("setPacketSize", int.class);
                     setPacketSizeMethod.invoke(connectOptions, Integer.parseInt(getCustomProperties().get("packetSize")));
                 } catch (NoSuchMethodException e) {
-                    log.fine("setPacketSize method not found in MSSQLConnectOptions, skipping");
+                    log.debug("setPacketSize method not found in MSSQLConnectOptions, skipping");
                 } catch (NumberFormatException e) {
-                    log.fine("Invalid packet size value: " + getCustomProperties().get("packetSize"));
+                    log.debug("Invalid packet size value: " + getCustomProperties().get("packetSize"));
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, "Error setting packet size for SQL Server connection", e);
+                    log.error("Error setting packet size for SQL Server connection", e);
                 }
             }
 
@@ -167,9 +166,9 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                     Method setSslMethod = mssqlConnectOptionsClass.getMethod("setSsl", boolean.class);
                     setSslMethod.invoke(connectOptions, Boolean.parseBoolean(getCustomProperties().get("ssl")));
                 } catch (NoSuchMethodException e) {
-                    log.fine("setSsl method not found in MSSQLConnectOptions, skipping");
+                    log.debug("setSsl method not found in MSSQLConnectOptions, skipping");
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, "Error setting SSL for SQL Server connection", e);
+                    log.error("Error setting SSL for SQL Server connection", e);
                 }
             }
 
@@ -196,12 +195,12 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                         setPropertyMethod.invoke(connectOptions, key, value);
                     } catch (NoSuchMethodException ex) {
                         // Ignore if no generic property setter is available
-                        log.fine("No setter found for property: " + key);
+                        log.debug("No setter found for property: " + key);
                     } catch (Exception ex) {
-                        log.log(Level.SEVERE, "Error setting property " + key + " for SQL Server connection", ex);
+                        log.error("Error setting property " + key + " for SQL Server connection", ex);
                     }
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, "Error setting property " + key + " for SQL Server connection", e);
+                    log.error("Error setting property " + key + " for SQL Server connection", e);
                 }
             }
 
@@ -212,7 +211,7 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                 poolOptionsClass = Class.forName("io.vertx.sqlclient.PoolOptions");
                 poolOptions = poolOptionsClass.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
-                log.log(Level.SEVERE, "Error creating PoolOptions", e);
+                log.error("Error creating PoolOptions", e);
                 return null;
             }
 
@@ -222,7 +221,7 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                     Method setMaxSizeMethod = poolOptionsClass.getMethod("setMaxSize", int.class);
                     setMaxSizeMethod.invoke(poolOptions, getMaxPoolSize());
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, "Error setting max pool size", e);
+                    log.error("Error setting max pool size", e);
                 }
             }
 
@@ -232,9 +231,9 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                     setMinSizeMethod.invoke(poolOptions, getMinPoolSize());
                 } catch (NoSuchMethodException e) {
                     // Min size might not be supported in all versions, ignore if method not found
-                    log.fine("Min size method not found in PoolOptions, skipping");
+                    log.debug("Min size method not found in PoolOptions, skipping");
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, "Error setting min pool size", e);
+                    log.error("Error setting min pool size", e);
                 }
             }
 
@@ -245,9 +244,9 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                     setMaxWaitQueueSizeMethod.invoke(poolOptions, getAcquireIncrement());
                 } catch (NoSuchMethodException e) {
                     // Max wait queue size might not be supported in all versions, ignore if method not found
-                    log.fine("Max wait queue size method not found in PoolOptions, skipping");
+                    log.debug("Max wait queue size method not found in PoolOptions, skipping");
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, "Error setting max wait queue size", e);
+                    log.error("Error setting max wait queue size", e);
                 }
             }
 
@@ -259,9 +258,9 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                     setMaxLifetimeMethod.invoke(poolOptions, getMaxLifeTime() * 1000);
                 } catch (NoSuchMethodException e) {
                     // Max lifetime might not be supported in all versions, ignore if method not found
-                    log.fine("Max lifetime method not found in PoolOptions, skipping");
+                    log.debug("Max lifetime method not found in PoolOptions, skipping");
                 } catch (Exception e) {
-                    log.log(Level.SEVERE, "Error setting max lifetime", e);
+                    log.error("Error setting max lifetime", e);
                 }
             }
 
@@ -272,11 +271,11 @@ public class SqlServerConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                 Object client = poolMethod.invoke(null, vertx, connectOptions, poolOptions);
                 return (SqlClient) client;
             } catch (Exception e) {
-                log.log(Level.SEVERE, "Error creating SQL Server pool", e);
+                log.error("Error creating SQL Server pool", e);
                 return null;
             }
         } catch (Exception e) {
-            log.log(Level.SEVERE, "Error creating SQL Server SqlClient", e);
+            log.error("Error creating SQL Server SqlClient", e);
             return null;
         }
     }

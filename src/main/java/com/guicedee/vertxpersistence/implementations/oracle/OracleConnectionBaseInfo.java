@@ -5,17 +5,16 @@ import com.guicedee.vertx.spi.VertXPreStartup;
 import com.guicedee.vertxpersistence.CleanVertxConnectionBaseInfo;
 import io.vertx.core.Vertx;
 import io.vertx.sqlclient.SqlClient;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.logging.Level;
 
 /**
  * A specialized ConnectionBaseInfo implementation for Oracle Database.
  * This class provides Oracle-specific configuration options for Vertx SQL client.
  */
-@Slf4j
+@Log4j2
 public class OracleConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
 
     /**

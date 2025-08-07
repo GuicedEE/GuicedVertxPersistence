@@ -21,12 +21,14 @@ import com.guicedee.vertxpersistence.PersistService;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 
 import java.util.Map;
 
 /**
  * @author Dhanji R. Prasanna (dhanji@gmail.com)
  */
+@Log4j2
 public class JtaPersistService implements PersistService
 {
     private final String persistenceUnitName;
@@ -37,6 +39,7 @@ public class JtaPersistService implements PersistService
             String persistenceUnitName,
             Map<?, ?> persistenceProperties)
     {
+        log.debug("📋 Creating JtaPersistService for persistence unit: '{}'", persistenceUnitName);
         this.persistenceUnitName = persistenceUnitName;
         this.persistenceProperties = persistenceProperties;
     }
@@ -45,55 +48,84 @@ public class JtaPersistService implements PersistService
 
     public EntityManagerFactory getEmFactory()
     {
+        log.debug("📋 Getting EntityManagerFactory for persistence unit: '{}'", persistenceUnitName);
         if (emFactory == null)
         {
+            log.debug("🔄 EntityManagerFactory not initialized, starting JtaPersistService for persistence unit: '{}'", persistenceUnitName);
             start();
         }
+        log.debug("📤 Returning EntityManagerFactory for persistence unit: '{}'", persistenceUnitName);
         return emFactory;
     }
 
     @Override
     public synchronized void start()
     {
+        log.info("🚀 Starting JtaPersistService for persistence unit: '{}'", persistenceUnitName);
         if (null != emFactory)
         {
+            log.debug("📋 EntityManagerFactory already exists for persistence unit: '{}', skipping initialization", persistenceUnitName);
             return;
         }
 
         if (null != persistenceProperties)
         {
-            this.emFactory =
-                    Persistence.createEntityManagerFactory(persistenceUnitName, persistenceProperties);
-/*            if(this.unitOfWork != null) {
-                var emfr = this.emFactory
-                        .unwrap(Mutiny.SessionFactory.class);
-                this.unitOfWork.setEntityManagerFactory((org.hibernate.reactive.mutiny.impl.MutinySessionFactoryImpl) emfr);
-            }*/
+            try {
+                log.debug("📋 Creating EntityManagerFactory for persistence unit: '{}'", persistenceUnitName);
+                this.emFactory =
+                        Persistence.createEntityManagerFactory(persistenceUnitName, persistenceProperties);
+                log.info("✅ Successfully created EntityManagerFactory for persistence unit: '{}'", persistenceUnitName);
+/*                if(this.unitOfWork != null) {
+                    var emfr = this.emFactory
+                            .unwrap(Mutiny.SessionFactory.class);
+                    this.unitOfWork.setEntityManagerFactory((org.hibernate.reactive.mutiny.impl.MutinySessionFactoryImpl) emfr);
+                }*/
+            } catch (Exception e) {
+                log.error("❌ Failed to create EntityManagerFactory for persistence unit: '{}': {}", 
+                    persistenceUnitName, e.getMessage(), e);
+                throw e;
+            }
+        } else {
+            log.warn("⚠️ No persistence properties provided for persistence unit: '{}'", persistenceUnitName);
         }
     }
 
     @Override
     public synchronized void stop()
     {
+        log.info("🛑 Stopping JtaPersistService for persistence unit: '{}'", persistenceUnitName);
         if (null != emFactory && emFactory.isOpen())
         {
-            emFactory.close();
+            try {
+                log.debug("📋 Closing EntityManagerFactory for persistence unit: '{}'", persistenceUnitName);
+                emFactory.close();
+                log.info("✅ Successfully closed EntityManagerFactory for persistence unit: '{}'", persistenceUnitName);
+            } catch (Exception e) {
+                log.error("❌ Failed to close EntityManagerFactory for persistence unit: '{}': {}", 
+                    persistenceUnitName, e.getMessage(), e);
+            }
+        } else {
+            log.debug("📋 No open EntityManagerFactory to close for persistence unit: '{}'", persistenceUnitName);
         }
     }
 
     public static class EntityManagerFactoryProvider implements Provider<EntityManagerFactory>
     {
+        private static final org.apache.logging.log4j.Logger log = org.apache.logging.log4j.LogManager.getLogger(EntityManagerFactoryProvider.class);
         private final JtaPersistService emProvider;
 
         public EntityManagerFactoryProvider(JtaPersistService emProvider)
         {
             this.emProvider = emProvider;
+            log.debug("📋 Created EntityManagerFactoryProvider for persistence unit: '{}'", emProvider.persistenceUnitName);
         }
 
         @Override
         public EntityManagerFactory get()
         {
-            assert null != emProvider.emFactory;
+            log.debug("📋 Provider requested EntityManagerFactory for persistence unit: '{}'", emProvider.persistenceUnitName);
+            assert null != emProvider.emFactory : "EntityManagerFactory is null for persistence unit: " + emProvider.persistenceUnitName;
+            log.debug("📤 Providing EntityManagerFactory for persistence unit: '{}'", emProvider.persistenceUnitName);
             return emProvider.emFactory;
         }
     }

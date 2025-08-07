@@ -11,20 +11,18 @@ import io.vertx.pgclient.SslMode;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.SqlClient;
 import lombok.extern.log4j.Log4j2;
-import lombok.extern.slf4j.Slf4j;
 import org.hibernate.reactive.pool.impl.SqlClientPool;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
 /**
  * A specialized ConnectionBaseInfo implementation for PostgreSQL.
  * This class provides PostgreSQL-specific configuration options for Vertx SQL client.
  */
-@Slf4j
+@Log4j2
 public class PostgresConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
 
     /**
