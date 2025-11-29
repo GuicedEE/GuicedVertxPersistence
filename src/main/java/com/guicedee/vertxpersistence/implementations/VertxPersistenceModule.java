@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import com.guicedee.client.IGuiceContext;
-import com.guicedee.guicedinjection.interfaces.IGuiceModule;
+import com.guicedee.client.services.lifecycle.IGuiceModule;
 import com.guicedee.vertxpersistence.ConnectionBaseInfo;
 import com.guicedee.vertxpersistence.annotations.EntityManager;
 import com.guicedee.vertxpersistence.bind.JtaPersistModule;

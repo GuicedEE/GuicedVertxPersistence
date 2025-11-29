@@ -2,15 +2,10 @@ package com.guicedee.vertxpersistence.test;
 
 import com.google.inject.Key;
 import com.google.inject.name.Names;
-import com.guicedee.client.CallScoper;
 import com.guicedee.client.IGuiceContext;
 import com.guicedee.vertx.spi.VertXPreStartup;
-import com.guicedee.vertxpersistence.ConnectionBaseInfo;
 import com.guicedee.vertxpersistence.PersistService;
 import com.guicedee.vertxpersistence.bind.JtaPersistService;
-import io.smallrye.mutiny.Uni;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import lombok.extern.log4j.Log4j2;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.BeforeAll;

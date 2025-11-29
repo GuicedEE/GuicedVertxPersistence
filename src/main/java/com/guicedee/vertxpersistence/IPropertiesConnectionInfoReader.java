@@ -1,6 +1,6 @@
 package com.guicedee.vertxpersistence;
 
-import com.guicedee.guicedinjection.interfaces.IDefaultService;
+import com.guicedee.client.services.IDefaultService;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
 

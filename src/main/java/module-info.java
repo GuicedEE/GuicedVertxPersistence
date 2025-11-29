@@ -1,8 +1,7 @@
-import com.guicedee.guicedinjection.interfaces.IGuiceConfigurator;
+import com.guicedee.client.services.lifecycle.IGuiceConfigurator;
 import com.guicedee.vertxpersistence.IPropertiesConnectionInfoReader;
 import com.guicedee.vertxpersistence.IPropertiesEntityManagerReader;
 import com.guicedee.vertxpersistence.implementations.GuicedConfigurator;
-import com.guicedee.vertxpersistence.implementations.db2.DB2ConnectionBaseInfo;
 import com.guicedee.vertxpersistence.implementations.db2.DB2HibernateProperties;
 import com.guicedee.vertxpersistence.implementations.hibernateproperties.HibernateEntityManagerProperties;
 import com.guicedee.vertxpersistence.implementations.mysql.MySqlHibernateProperties;
