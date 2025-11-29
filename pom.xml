@@ -27,6 +27,7 @@
         <dependency>
             <groupId>com.guicedee.services</groupId>
             <artifactId>scram</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
@@ -38,6 +39,7 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-pg-client</artifactId>
+            <optional>true</optional>
             <exclusions>
                 <exclusion>
                     <groupId>com.ongres.scram</groupId>
