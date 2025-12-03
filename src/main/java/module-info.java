@@ -41,7 +41,6 @@ module com.guicedee.vertxpersistence {
     requires transitive com.guicedee.microprofile.config;
 
     requires transitive io.smallrye.mutiny;
-    requires transitive com.ongres.scram.client;
     requires static io.vertx.sql.client.pg;
 
     uses com.guicedee.vertxpersistence.IPropertiesConnectionInfoReader;
