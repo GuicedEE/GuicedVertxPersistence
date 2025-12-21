@@ -4,6 +4,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import com.guicedee.client.IGuiceContext;
+import com.guicedee.client.scopes.CallScopeProperties;
+import com.guicedee.client.scopes.CallScopeSource;
+import com.guicedee.client.scopes.CallScoper;
 import com.guicedee.guicedinjection.GuiceContext;
 import com.guicedee.client.services.lifecycle.IGuiceModule;
 import com.guicedee.client.services.lifecycle.IGuicePostStartup;
@@ -55,11 +58,26 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
     @Override
     public List<Future<Boolean>> postLoad() {
         return List.of(getVertx().executeBlocking(() -> {
-            log.info("🚀 PersistService starting");
-            JtaPersistService ps = (JtaPersistService) IGuiceContext.get(Key.get(PersistService.class, Names.named("ActivityMaster-Test")));
-            ps.start();
-            log.info("✅ PersistService started successfully");
-            return true;
+            CallScoper callScoper = IGuiceContext.get(CallScoper.class);
+            boolean startedScope = callScoper.isStartedScope();
+            if (!startedScope) {
+                callScoper.enter();
+            }
+            try {
+                CallScopeProperties props = IGuiceContext.get(CallScopeProperties.class);
+                if (props.getSource() == null || props.getSource() == CallScopeSource.Unknown) {
+                    props.setSource(CallScopeSource.Persistence);
+                }
+                log.info("🚀 PersistService starting");
+                JtaPersistService ps = (JtaPersistService) IGuiceContext.get(Key.get(PersistService.class, Names.named("ActivityMaster-Test")));
+                ps.start();
+                log.info("✅ PersistService started successfully");
+                return true;
+            } finally {
+                if (!startedScope) {
+                    callScoper.exit();
+                }
+            }
         }));
     }
 
