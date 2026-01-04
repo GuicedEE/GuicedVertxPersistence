@@ -16,7 +16,7 @@
             <property name="hibernate.use_sql_comments" value="${system.hibernate.use_sql_comments}"/>
 
             <property name="hibernate.cache.use_second_level_cache" value="true"/>
-            <property name="hibernate.cache.use_query_cache" value="true"/>
+            <property name="hibernate.cache.use_query_cache" value="false"/>
 
             <property name="jboss.entity.manager.factory.jndi.name" value="java:/testMeEntityManagerFactory"/>
             <property name="hibernate.cache.provider_class" value="org.hibernate.cache.EhCacheProvider"/>
