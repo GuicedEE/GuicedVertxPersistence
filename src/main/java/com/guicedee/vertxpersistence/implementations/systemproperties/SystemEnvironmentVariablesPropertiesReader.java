@@ -34,6 +34,13 @@ public class SystemEnvironmentVariablesPropertiesReader
     private static final String DIRECT_PATTERN = "([a-zA-Z0-9_\\-\\.]+)\\:(.+)";
     private static final Pattern directPattern = Pattern.compile(DIRECT_PATTERN);
 
+    /**
+     * Resolves placeholders in incoming properties using system properties and environment variables.
+     *
+     * @param persistenceUnit the persistence unit descriptor
+     * @param incomingProperties the properties to resolve in-place
+     * @return an empty map (properties are updated in-place)
+     */
     @Override
     public Map<String, String> processProperties(PersistenceUnitDescriptor persistenceUnit, Properties incomingProperties)
     {
@@ -155,12 +162,23 @@ public class SystemEnvironmentVariablesPropertiesReader
         return result.toString();
     }
 
+    /**
+     * Applies to all persistence units.
+     *
+     * @param persistenceUnit the persistence unit descriptor
+     * @return true for all units
+     */
     @Override
     public boolean applicable(PersistenceUnitDescriptor persistenceUnit)
     {
         return true;
     }
 
+    /**
+     * Runs early so environment substitutions are available to other readers.
+     *
+     * @return the sort order for this reader
+     */
     @Override
     public Integer sortOrder()
     {

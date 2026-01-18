@@ -1,13 +1,13 @@
 package com.guicedee.vertxpersistence.annotations;
 
 /**
- * Generic exception to mark that no connection information was supplied
+ * Signals that provided connection information is invalid or inconsistent.
  */
 public class InvalidConnectionInfoException
 		extends RuntimeException
 {
 	/**
-	 * Generic exception to mark that no connection information was supplied
+	 * Creates a new exception without a detail message.
 	 */
 	public InvalidConnectionInfoException()
 	{
@@ -15,9 +15,9 @@ public class InvalidConnectionInfoException
 	}
 
 	/**
-	 * Generic exception to mark that no connection information was supplied
+	 * Creates a new exception with a detail message.
 	 *
-	 * @param message
+	 * @param message the detail message
 	 */
 	public InvalidConnectionInfoException(String message)
 	{
@@ -25,10 +25,10 @@ public class InvalidConnectionInfoException
 	}
 
 	/**
-	 * Generic exception to mark that no connection information was supplied
+	 * Creates a new exception with a detail message and cause.
 	 *
-	 * @param message
-	 * @param cause
+	 * @param message the detail message
+	 * @param cause the underlying cause
 	 */
 	public InvalidConnectionInfoException(String message, Throwable cause)
 	{
@@ -36,9 +36,9 @@ public class InvalidConnectionInfoException
 	}
 
 	/**
-	 * Generic exception to mark that no connection information was supplied
+	 * Creates a new exception with a cause.
 	 *
-	 * @param cause
+	 * @param cause the underlying cause
 	 */
 	public InvalidConnectionInfoException(Throwable cause)
 	{
@@ -46,12 +46,12 @@ public class InvalidConnectionInfoException
 	}
 
 	/**
-	 * Generic exception to mark that no connection information was supplied
+	 * Creates a new exception with advanced suppression and stack trace options.
 	 *
-	 * @param message
-	 * @param cause
-	 * @param enableSuppression
-	 * @param writableStackTrace
+	 * @param message the detail message
+	 * @param cause the underlying cause
+	 * @param enableSuppression whether suppression is enabled
+	 * @param writableStackTrace whether the stack trace should be writable
 	 */
 	public InvalidConnectionInfoException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace)
 	{

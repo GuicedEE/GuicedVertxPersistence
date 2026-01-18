@@ -25,9 +25,9 @@ import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 import java.util.*;
 
 /**
- * An abstract implementation for persistence.xml
- * <p>
- * Configuration conf = TransactionManagerServices.getConfiguration(); can be used to configure the transaction manager.
+ * Base Guice module that wires a persistence unit defined in persistence.xml.
+ * Implementations supply the persistence unit name and build a {@link ConnectionBaseInfo}
+ * from its properties.
  */
 @Log4j2
 @EntityManager
@@ -39,7 +39,7 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
     private static final List<PersistenceUnitDescriptor> PersistenceUnitDescriptors = new ArrayList<>();
 
     /**
-     * Constructor DatabaseModule creates a new DatabaseModule instance.
+     * Parses persistence.xml resources and registers lifecycle hooks.
      */
     public DatabaseModule() {
         var parser = PersistenceXmlParser.create(Map.of(), null, null);
@@ -55,6 +55,11 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
         GuiceContext.instance().loadPreDestroyServices().add(this);
     }
 
+    /**
+     * Starts the persistence service after Guice startup.
+     *
+     * @return a list of futures indicating startup completion
+     */
     @Override
     public List<Future<Boolean>> postLoad() {
         return List.of(getVertx().executeBlocking(() -> {
@@ -81,6 +86,9 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
         }));
     }
 
+    /**
+     * Stops the persistence service during shutdown.
+     */
     @Override
     public void onDestroy() {
         IGuiceContext.get(Key.get(PersistService.class, Names.named("ActivityMaster-Test"))).stop();
@@ -88,7 +96,7 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
     }
 
     /**
-     * Configures the module with the bindings
+     * Configures module bindings for the persistence unit.
      */
     @Override
     protected void configure() {
@@ -138,24 +146,28 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
     }
 
     /**
-     * The name found in persistence.xml
+     * Returns the persistence unit name as defined in persistence.xml.
      *
-     * @return The persistence unit name to sear h
+     * @return the persistence unit name to load
      */
     @NotNull
     protected abstract String getPersistenceUnitName();
 
     /**
-     * Builds up connection base data info from a persistence unit.
-     * <p>
-     * Use with the utility methods e.g.
+     * Builds connection base info from a persistence unit and properties.
      *
-     * @param unit The physical persistence unit, changes have no effect the persistence ready
-     * @return The new connetion base info
+     * @param unit The persistence unit descriptor
+     * @param filteredProperties properties derived from persistence.xml and overrides
+     * @return the connection base info for this unit
      */
     @NotNull
     protected abstract ConnectionBaseInfo getConnectionBaseInfo(PersistenceUnitDescriptor unit, Properties filteredProperties);
 
+    /**
+     * Finds the persistence unit descriptor matching {@link #getPersistenceUnitName()}.
+     *
+     * @return the descriptor or null when not found
+     */
     private PersistenceUnitDescriptor getPersistenceUnit() {
         for (PersistenceUnitDescriptor PersistenceUnitDescriptor : PersistenceUnitDescriptors) {
             if (PersistenceUnitDescriptor.getName()
@@ -167,9 +179,9 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
     }
 
     /**
-     * A properties map of the properties from the file
+     * Builds a properties map for the active persistence unit.
      *
-     * @return A properties map of the given persistence units properties
+     * @return the persistence unit properties
      */
     @NotNull
     private Properties getJDBCPropertiesMap() {
@@ -179,20 +191,18 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
     }
 
     /**
-     * The name found in jta-data-source from the persistence.xml
+     * Returns the JNDI mapping name to use when not specified by the connection info.
      *
-     * @return The JNDI mapping name to use
+     * @return the JNDI mapping name, or null to skip
      */
     protected String getJndiMapping() {
         return null;
     }
 
     /**
-     * Builds a property map from a persistence unit properties file
-     * <p>
-     * Overwrites ${} items with system properties
+     * Builds a property map from persistence unit properties, resolving system substitutions.
      *
-     * @param pu             The persistence unit
+     * @param pu The persistence unit
      * @param jdbcProperties The final properties map
      */
     protected void configurePersistenceUnitProperties(PersistenceUnitDescriptor pu, Properties jdbcProperties) {

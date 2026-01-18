@@ -16,6 +16,15 @@ import java.util.Properties;
 public class VertxSqlClientConnectionBaseBuilder
         implements IPropertiesConnectionInfoReader<VertxSqlClientConnectionBaseBuilder>
 {
+    /**
+     * Populates connection info from persistence properties and returns a database-specific
+     * {@link ConnectionBaseInfo} implementation when possible.
+     *
+     * @param unit the persistence unit descriptor
+     * @param filteredProperties the properties scoped to the unit
+     * @param cbi the connection info to populate
+     * @return a populated, possibly database-specific, connection info instance
+     */
     @Override
     public ConnectionBaseInfo populateConnectionBaseInfo(PersistenceUnitDescriptor unit, Properties filteredProperties, ConnectionBaseInfo cbi)
     {

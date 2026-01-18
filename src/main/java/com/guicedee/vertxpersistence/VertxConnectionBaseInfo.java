@@ -11,16 +11,15 @@ import java.util.Map;
 import io.vertx.sqlclient.SqlClient;
 
 /**
- * This class is a basic container (mirror) for the database jtm builder string.
- * Exists to specify the default properties for connections that a jtm should implement should btm be switched for a different
- * implementation
+ * Connection info implementation that can build a Vert.x SQL {@link SqlClient}.
+ * Uses reflection to avoid a hard dependency on specific Vert.x SQL client classes.
  */
 @Log4j2
 public class VertxConnectionBaseInfo
 		extends ConnectionBaseInfo
 {
 	/**
-	 * Constructor VertxConnectionBaseInfo creates a new VertxConnectionBaseInfo instance with XA enabled
+	 * Creates a connection info instance with default settings.
 	 */
 	public VertxConnectionBaseInfo()
 	{
@@ -254,8 +253,7 @@ public class VertxConnectionBaseInfo
 	/**
 	 * Configures this handler as either an XA or Non-XA Resource
 	 *
-	 * @param xa
-	 * 		If the connection is XA
+	 * @param xa If the connection is XA
 	 */
 	public VertxConnectionBaseInfo(boolean xa)
 	{

@@ -99,11 +99,21 @@ public abstract class ConnectionBaseInfo
 
 	private final Map<String, String> customProperties = new HashMap<>();
 
+	/**
+	 * Creates a new connection info instance with default settings.
+	 */
 	public ConnectionBaseInfo()
 	{
 		serverInstanceNameProperty = "Instance";
 	}
 
+	/**
+	 * Populates this instance using available {@link IPropertiesConnectionInfoReader} services.
+	 *
+	 * @param unit the persistence unit descriptor
+	 * @param filteredProperties properties scoped to the persistence unit
+	 * @return this instance for chaining
+	 */
 	public ConnectionBaseInfo populateFromProperties(PersistenceUnitDescriptor unit, Properties filteredProperties)
 	{
 		for (IPropertiesConnectionInfoReader<?> connectionInfoReader : IGuiceContext

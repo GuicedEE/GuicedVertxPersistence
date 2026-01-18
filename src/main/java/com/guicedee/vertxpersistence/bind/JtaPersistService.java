@@ -26,7 +26,7 @@ import lombok.extern.log4j.Log4j2;
 import java.util.Map;
 
 /**
- * @author Dhanji R. Prasanna (dhanji@gmail.com)
+ * Manages lifecycle for a JPA {@link EntityManagerFactory} backed by a persistence unit.
  */
 @Log4j2
 public class JtaPersistService implements PersistService
@@ -35,6 +35,12 @@ public class JtaPersistService implements PersistService
     @Getter
     private final Map<?, ?> persistenceProperties;
 
+    /**
+     * Creates a persistence service for the given unit and properties.
+     *
+     * @param persistenceUnitName the JPA persistence unit name
+     * @param persistenceProperties properties used to create the factory
+     */
     public JtaPersistService(
             String persistenceUnitName,
             Map<?, ?> persistenceProperties)
@@ -46,6 +52,11 @@ public class JtaPersistService implements PersistService
 
     private volatile EntityManagerFactory emFactory;
 
+    /**
+     * Returns the entity manager factory, starting it lazily if needed.
+     *
+     * @return the initialized EntityManagerFactory
+     */
     public EntityManagerFactory getEmFactory()
     {
         log.trace("📋 Getting EntityManagerFactory for persistence unit: '{}'", persistenceUnitName);
@@ -58,6 +69,9 @@ public class JtaPersistService implements PersistService
         return emFactory;
     }
 
+    /**
+     * Creates the EntityManagerFactory if it has not already been initialized.
+     */
     @Override
     public synchronized void start()
     {
@@ -90,6 +104,9 @@ public class JtaPersistService implements PersistService
         }
     }
 
+    /**
+     * Closes the EntityManagerFactory if it is open.
+     */
     @Override
     public synchronized void stop()
     {
@@ -109,17 +126,30 @@ public class JtaPersistService implements PersistService
         }
     }
 
+    /**
+     * Guice provider that exposes the EntityManagerFactory for the persistence unit.
+     */
     public static class EntityManagerFactoryProvider implements Provider<EntityManagerFactory>
     {
         private static final org.apache.logging.log4j.Logger log = org.apache.logging.log4j.LogManager.getLogger(EntityManagerFactoryProvider.class);
         private final JtaPersistService emProvider;
 
+        /**
+         * Creates the provider backed by the given persistence service.
+         *
+         * @param emProvider the persistence service providing the factory
+         */
         public EntityManagerFactoryProvider(JtaPersistService emProvider)
         {
             this.emProvider = emProvider;
             log.debug("📋 Created EntityManagerFactoryProvider for persistence unit: '{}'", emProvider.persistenceUnitName);
         }
 
+        /**
+         * Returns the EntityManagerFactory instance.
+         *
+         * @return the EntityManagerFactory
+         */
         @Override
         public EntityManagerFactory get()
         {

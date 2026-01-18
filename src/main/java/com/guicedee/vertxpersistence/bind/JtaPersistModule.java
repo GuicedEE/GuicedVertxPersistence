@@ -41,6 +41,13 @@ public final class JtaPersistModule extends PersistModule
 
     private static boolean defaultSet = false;
 
+    /**
+     * Creates a persistence module for a specific JPA unit and connection info.
+     *
+     * @param jpaUnit the persistence unit name
+     * @param connectionBaseInfo the connection settings backing the unit
+     * @param annotation the EntityManager binding annotation metadata
+     */
     public JtaPersistModule(String jpaUnit, ConnectionBaseInfo connectionBaseInfo, com.guicedee.vertxpersistence.annotations.EntityManager annotation)
     {
         this.annotation = annotation;
@@ -77,6 +84,9 @@ public final class JtaPersistModule extends PersistModule
         return keys;
     }
 
+    /**
+     * Configures persistence services, properties, and reactive bindings.
+     */
     @Override
     protected void configurePersistence()
     {
@@ -163,6 +173,8 @@ public final class JtaPersistModule extends PersistModule
      * Adds an interface to this module to use as a dynamic finder.
      *
      * @param iface Any interface type whose methods are all dynamic finders.
+     * @param <T> the finder interface type
+     * @return this module for chaining
      */
     public <T> JtaPersistModule addFinder(Class<T> iface)
     {

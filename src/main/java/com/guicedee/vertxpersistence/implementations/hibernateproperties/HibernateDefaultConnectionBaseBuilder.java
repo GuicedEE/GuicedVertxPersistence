@@ -16,6 +16,14 @@ public class HibernateDefaultConnectionBaseBuilder
         implements IPropertiesConnectionInfoReader<HibernateDefaultConnectionBaseBuilder>
 {
 
+    /**
+     * Applies default Hibernate connection values and maps standard properties.
+     *
+     * @param unit the persistence unit descriptor
+     * @param filteredProperties the properties scoped to the unit
+     * @param cbi the connection info to populate
+     * @return the populated connection info
+     */
     @Override
     public ConnectionBaseInfo populateConnectionBaseInfo(PersistenceUnitDescriptor unit, Properties filteredProperties, ConnectionBaseInfo cbi)
     {

@@ -21,6 +21,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Guice module that wires persistence units, entity manager annotations,
+ * and Vert.x SQL clients based on discovered configuration and modules.
+ */
 @Log4j2
 public class VertxPersistenceModule extends AbstractModule implements IGuiceModule<VertxPersistenceModule>
 {
@@ -47,6 +51,10 @@ public class VertxPersistenceModule extends AbstractModule implements IGuiceModu
 
     private static final String DEFAULT_PACKAGE = "";
 
+    /**
+     * Scans for persistence modules, validates entity manager naming, and binds
+     * the default and named EntityManager instances.
+     */
     @Override
     protected void configure()
     {
@@ -247,6 +255,12 @@ public class VertxPersistenceModule extends AbstractModule implements IGuiceModu
         return value != null ? value.toString() : DEFAULT_PACKAGE;
     }
 
+    /**
+     * Determines whether the package-level annotation marks this entity manager as default.
+     *
+     * @param annotationInfo the package annotation info
+     * @return true when defaultEm is set or missing, false otherwise
+     */
     private boolean getAnnotationDefaultEm(AnnotationInfo annotationInfo)
     {
         Object defaultEm = annotationInfo.getParameterValues().getValue("defaultEm");

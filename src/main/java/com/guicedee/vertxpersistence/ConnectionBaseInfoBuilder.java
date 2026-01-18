@@ -6,9 +6,20 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
 import java.util.Properties;
 
+/**
+ * Populates {@link ConnectionBaseInfo} from standard JPA/Jakarta persistence properties.
+ */
 public class ConnectionBaseInfoBuilder
 		implements IPropertiesConnectionInfoReader<ConnectionBaseInfoBuilder>
 {
+	/**
+	 * Maps JDBC properties (url, user, password, driver) into the connection info.
+	 *
+	 * @param unit the persistence unit being configured
+	 * @param filteredProperties properties scoped to the persistence unit
+	 * @param cbi target connection info instance
+	 * @return the populated connection info
+	 */
 	@Override
 	public ConnectionBaseInfo populateConnectionBaseInfo(PersistenceUnitDescriptor unit, Properties filteredProperties, ConnectionBaseInfo cbi)
 	{

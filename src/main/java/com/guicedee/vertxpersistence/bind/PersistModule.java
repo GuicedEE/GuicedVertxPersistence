@@ -30,6 +30,9 @@ import java.lang.reflect.Method;
  */
 public abstract class PersistModule extends AbstractModule
 {
+    /**
+     * Installs persistence bindings and validates required services.
+     */
     @Override
     protected final void configure()
     {
@@ -54,6 +57,9 @@ public abstract class PersistModule extends AbstractModule
         }*/
     }
 
+    /**
+     * Contributes persistence-specific bindings such as EntityManagerFactory and services.
+     */
     protected abstract void configurePersistence();
 
     private static final Matcher<Method> NOT_OBJECT_METHOD =

@@ -9,21 +9,23 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * Manages properties passed into the entity manager factory
+ * Contributes entity-manager properties derived from a persistence unit.
+ *
+ * @param <J> self type used by the service loader
  */
 public interface IPropertiesEntityManagerReader<J extends IPropertiesEntityManagerReader<J>> extends IDefaultService<J>
 {
 	/**
-	 * Manages properties passed into the entity manager factory
-	 * <p>
-	 * return properties
+	 * Processes and returns properties for the entity manager factory.
 	 */
-	Map<String, String> processProperties(org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor persistenceUnit, Properties incomingProperties);
+	Map<String, String> processProperties(org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor persistenceUnit,
+										  Properties incomingProperties);
 	
 	/**
-	 * If this class is applicable to the persistence type coming in
+	 * Indicates whether this reader applies to the given persistence unit.
 	 *
-	 * @return true or false if this is the manager that must be used
+	 * @param persistenceUnit the persistence unit descriptor
+	 * @return true when this reader should be used
 	 */
 	boolean applicable(PersistenceUnitDescriptor persistenceUnit);
 }
