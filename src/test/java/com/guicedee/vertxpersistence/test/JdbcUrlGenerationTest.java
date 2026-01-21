@@ -121,6 +121,15 @@ public class JdbcUrlGenerationTest {
     }
 
     @Test
+    public void testSqlServerTrustServerCertificate() {
+        SqlServerConnectionBaseInfo sqlServerInfo = new SqlServerConnectionBaseInfo();
+        sqlServerInfo.setTrustServerCertificate(true);
+        // Note: trustServerCertificate doesn't affect JDBC URL generation in the current implementation of getJdbcUrl()
+        // unless it's in customProperties, but we want to make sure the field exists and works.
+        assertEquals(true, sqlServerInfo.isTrustServerCertificate());
+    }
+
+    @Test
     public void testDB2JdbcUrlGeneration() {
         // Create a DB2 connection info
         DB2ConnectionBaseInfo db2Info = new DB2ConnectionBaseInfo();

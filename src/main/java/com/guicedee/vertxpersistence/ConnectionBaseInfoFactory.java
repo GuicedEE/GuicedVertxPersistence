@@ -48,7 +48,7 @@ public class ConnectionBaseInfoFactory {
                 return new OracleConnectionBaseInfo(xa);
             case "sqlserver":
             case "mssql":
-                return new SqlServerConnectionBaseInfo(xa);
+                return new SqlServerConnectionBaseInfo();
             case "db2":
                 return new DB2ConnectionBaseInfo(xa);
             default:

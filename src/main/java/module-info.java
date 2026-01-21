@@ -36,12 +36,9 @@ module com.guicedee.vertxpersistence {
     requires transitive jakarta.transaction;
 
     requires transitive org.hibernate.orm.core;
-    requires transitive io.vertx.sql.client;
-    requires transitive io.vertx.mutiny;
-    requires transitive com.guicedee.microprofile.config;
-
-    requires transitive io.smallrye.mutiny;
     requires static io.vertx.sql.client.pg;
+    requires static io.vertx.sql.client.mssql;
+    requires transitive io.vertx.sql.client;
 
     uses com.guicedee.vertxpersistence.IPropertiesConnectionInfoReader;
     uses com.guicedee.vertxpersistence.IPropertiesEntityManagerReader;
