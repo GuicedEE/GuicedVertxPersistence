@@ -31,6 +31,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.ongres.scram</groupId>
+            <artifactId>scram-client</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-pg-client</artifactId>
             <optional>true</optional>
@@ -93,6 +99,11 @@
         </dependency>
 
         <dependency>
+            <groupId>com.guicedee.services</groupId>
+            <artifactId>hibernate-core</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.guicedee</groupId>
             <artifactId>guice-injection</artifactId>
         </dependency>
@@ -133,13 +144,13 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
+    <!--    <dependency>
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>
             <scope>test</scope>
             <optional>true</optional>
         </dependency>
-
+-->
         <dependency>
             <groupId>com.guicedee.services</groupId>
             <artifactId>vertx-mutiny</artifactId>
@@ -188,6 +199,7 @@
                     <argLine>
                         --add-reads org.jboss.logging=org.hibernate.reactive
                         --add-reads org.hibernate.orm.core=guiced.vertx.persistence.test
+                        --add-exports io.vertx.sql.client/io.vertx.sqlclient.impl=org.hibernate.reactive
                     </argLine>
                 </configuration>
             </plugin>

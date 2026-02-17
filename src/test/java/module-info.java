@@ -1,3 +1,4 @@
+import com.guicedee.client.services.lifecycle.IGuiceModule;
 import com.guicedee.vertxpersistence.DatabaseModule;
 import com.guicedee.vertxpersistence.test.TestModulePostgresReactive;
 
@@ -8,12 +9,12 @@ open module guiced.vertx.persistence.test {
     requires transitive com.guicedee.vertxpersistence;
     requires transitive com.sun.jna;
 
-    provides DatabaseModule with TestModulePostgresReactive;
-
+    provides IGuiceModule with TestModulePostgresReactive;
 
     //reactive
     requires io.vertx.sql.client;
     requires io.vertx.sql.client.pg;
+    requires com.ongres.scram.client;
     //jdbc
     //requires org.postgresql.jdbc;
 

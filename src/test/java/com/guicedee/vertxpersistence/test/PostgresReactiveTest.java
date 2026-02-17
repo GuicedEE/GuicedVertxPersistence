@@ -69,7 +69,7 @@ public class PostgresReactiveTest {
     public void testReactivePostgresConnection() {
         // Register the PostgreSQL reactive test module
         IGuiceContext.registerModule("com.guicedee.guicedpersistence.test");
-        IGuiceContext.registerModule(new TestModulePostgresReactive());
+        //IGuiceContext.registerModule(new TestModulePostgresReactive());
         IGuiceContext.getContext().inject();
 
         // Get the CallScoper to enter and exit a scope

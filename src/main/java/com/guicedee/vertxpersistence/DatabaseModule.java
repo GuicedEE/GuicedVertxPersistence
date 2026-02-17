@@ -131,6 +131,65 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
             }
             log.info("💾 {} - Connection Base Info Final - {}", getPersistenceUnitName(), connectionBaseInfo);
             connectionBaseInfo.setPersistenceUnitName(getPersistenceUnitName());
+            // Pre-initialize a shared, named Vert.x SQL pool as early as possible so HR can reuse it
+            // We try hard to execute this on a Vert.x event-loop, but also provide safe fallbacks
+            try {
+                String puName = String.valueOf(connectionBaseInfo.getPersistenceUnitName());
+                var vertx = com.guicedee.vertx.spi.VertXPreStartup.getVertx();
+                if (vertx != null) {
+                    log.info("[DB-POOL-INIT] Scheduling pool init on Vert.x context for PU='{}'", puName);
+
+                    // Primary: schedule on event-loop via runOnContext
+                    vertx.runOnContext(v -> {
+                        try {
+                            log.info("[DB-POOL-INIT] runOnContext executing for PU='{}' on thread='{}'", puName, Thread.currentThread().getName());
+                            io.vertx.sqlclient.SqlClient client = connectionBaseInfo.toPooledDatasource();
+                            if (client != null) {
+                                log.info("[DB-POOL-INIT] runOnContext pool init complete for PU='{}'", puName);
+                            } else {
+                                log.warn("[DB-POOL-INIT] runOnContext pool init returned null for PU='{}'", puName);
+                            }
+                        } catch (Throwable t) {
+                            log.warn("[DB-POOL-INIT] runOnContext pool init failed for PU='{}': {}", puName, t.toString());
+                        }
+                    });
+
+                    // Secondary: a zero-delay timer as a backup in case runOnContext doesn't fire under debugger
+                    try {
+                        vertx.setTimer(0, id -> {
+                            try {
+                                log.info("[DB-POOL-INIT] setTimer(0) executing for PU='{}' on thread='{}'", puName, Thread.currentThread().getName());
+                                io.vertx.sqlclient.SqlClient client = connectionBaseInfo.toPooledDatasource();
+                                if (client != null) {
+                                    log.info("[DB-POOL-INIT] setTimer(0) pool init complete for PU='{}'", puName);
+                                } else {
+                                    log.warn("[DB-POOL-INIT] setTimer(0) pool init returned null for PU='{}'", puName);
+                                }
+                            } catch (Throwable t) {
+                                log.warn("[DB-POOL-INIT] setTimer(0) pool init failed for PU='{}': {}", puName, t.toString());
+                            }
+                        });
+                    } catch (Throwable tt) {
+                        log.debug("[DB-POOL-INIT] setTimer not available, skipping");
+                    }
+                } else {
+                    // Last resort: initialize immediately (off-context). Pool creation is safe off the event-loop,
+                    // and our implementation sets shared+name so HR can still reuse it.
+                    try {
+                        log.info("[DB-POOL-INIT] Vert.x not ready; performing immediate fallback pool init for PU='{}' on thread='{}'", puName, Thread.currentThread().getName());
+                        io.vertx.sqlclient.SqlClient client = connectionBaseInfo.toPooledDatasource();
+                        if (client != null) {
+                            log.info("[DB-POOL-INIT] Immediate fallback pool init complete for PU='{}'", puName);
+                        } else {
+                            log.warn("[DB-POOL-INIT] Immediate fallback pool init returned null for PU='{}'", puName);
+                        }
+                    } catch (Throwable t) {
+                        log.warn("[DB-POOL-INIT] Immediate fallback pool init failed for PU='{}': {}", puName, t.toString());
+                    }
+                }
+            } catch (Throwable t) {
+                log.debug("[DB-POOL-INIT] Skipping pre-initialization due to unexpected error: {}", t.toString());
+            }
             var emAnnos = getClass().getAnnotationsByType(EntityManager.class);
             if (emAnnos.length > 0) {
                 JtaPersistModule jpaModule = new JtaPersistModule(getPersistenceUnitName(), connectionBaseInfo, emAnnos[0]);
