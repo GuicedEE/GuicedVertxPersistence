@@ -4,21 +4,18 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import com.guicedee.client.IGuiceContext;
-import com.guicedee.client.scopes.CallScopeProperties;
-import com.guicedee.client.scopes.CallScopeSource;
-import com.guicedee.client.scopes.CallScoper;
-import com.guicedee.guicedinjection.GuiceContext;
 import com.guicedee.client.services.lifecycle.IGuiceModule;
 import com.guicedee.client.services.lifecycle.IGuicePostStartup;
 import com.guicedee.client.services.lifecycle.IGuicePreDestroy;
+import com.guicedee.guicedinjection.GuiceContext;
 import com.guicedee.vertxpersistence.annotations.EntityManager;
 import com.guicedee.vertxpersistence.bind.JtaPersistModule;
 import com.guicedee.vertxpersistence.bind.JtaPersistService;
 import com.guicedee.vertxpersistence.implementations.VertxPersistenceModule;
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.log4j.Log4j2;
-
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceXmlParser;
 
@@ -42,14 +39,16 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
      * Parses persistence.xml resources and registers lifecycle hooks.
      */
     public DatabaseModule() {
-        var parser = PersistenceXmlParser.create(Map.of(), null, null);
-        var urls = parser.getClassLoaderService().locateResources("META-INF/persistence.xml");
-        if (urls.isEmpty()) {
-            return;
-        }
-        PersistenceUnitDescriptors.addAll(parser.parse(urls).values());
-        for (var desc : PersistenceUnitDescriptors) {
-            log.debug("📋 PU Found: {}", desc.getName());
+        if(PersistenceUnitDescriptors.isEmpty()) {
+            var parser = PersistenceXmlParser.create(Map.of(), null, null);
+            var urls = parser.getClassLoaderService().locateResources("META-INF/persistence.xml");
+            if (urls.isEmpty()) {
+                return;
+            }
+            PersistenceUnitDescriptors.addAll(parser.parse(urls).values());
+            for (var desc : PersistenceUnitDescriptors) {
+                log.debug("📋 PU Found: {}", desc.getName());
+            }
         }
         GuiceContext.instance().loadPostStartupServices().add(this);
         GuiceContext.instance().loadPreDestroyServices().add(this);
@@ -58,32 +57,44 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
     /**
      * Starts the persistence service after Guice startup.
      *
+     * <p>Hibernate Reactive requires a valid Vert.x {@link io.vertx.core.Context} to be
+     * active when the {@code EntityManagerFactory} is created, because its internal
+     * reactive connection pool binds to the current context. Calling
+     * {@code vertx.executeBlocking()} on the bare {@code Vertx} instance runs the
+     * task on an internal worker thread with <b>no</b> associated context, which can
+     * cause "No Vert.x context" errors or silent mis-binding of the pool.</p>
+     *
+     * <p>To avoid this we first hop onto a proper event-loop context via
+     * {@code runOnContext}, then execute the blocking EMF creation from there.
+     * The worker thread spawned by {@code context.executeBlocking()} inherits the
+     * event-loop context, satisfying Hibernate Reactive's requirements.</p>
+     *
      * @return a list of futures indicating startup completion
      */
     @Override
     public List<Future<Boolean>> postLoad() {
-        return List.of(getVertx().executeBlocking(() -> {
-            CallScoper callScoper = IGuiceContext.get(CallScoper.class);
-            boolean startedScope = callScoper.isStartedScope();
-            if (!startedScope) {
-                callScoper.enter();
-            }
-            try {
-                CallScopeProperties props = IGuiceContext.get(CallScopeProperties.class);
-                if (props.getSource() == null || props.getSource() == CallScopeSource.Unknown) {
-                    props.setSource(CallScopeSource.Persistence);
-                }
-                log.info("🚀 PersistService starting");
-                JtaPersistService ps = (JtaPersistService) IGuiceContext.get(Key.get(PersistService.class, Names.named("ActivityMaster-Test")));
+        io.vertx.core.Promise<Boolean> promise = io.vertx.core.Promise.promise();
+        Vertx vertx = getVertx();
+
+        // Ensure we are on a Vert.x context before creating the EntityManagerFactory.
+        // runOnContext places us on an event-loop; executeBlocking from that context
+        // then runs the blocking work on a worker thread that still has a valid Context.
+        vertx.runOnContext(v -> {
+            io.vertx.core.Context ctx = vertx.getOrCreateContext();
+            ctx.executeBlocking(() -> {
+                log.info("🚀 PersistService starting on Vert.x context thread='{}'", Thread.currentThread().getName());
+                JtaPersistService ps = (JtaPersistService) IGuiceContext.get(Key.get(PersistService.class, Names.named(getPersistenceUnitName())));
                 ps.start();
-                log.info("✅ PersistService started successfully");
+                log.info("✅ PersistService started successfully for PU='{}'", getPersistenceUnitName());
                 return true;
-            } finally {
-                if (!startedScope) {
-                    callScoper.exit();
-                }
-            }
-        }));
+            }).onSuccess(promise::complete)
+              .onFailure(err -> {
+                  log.error("❌ PersistService startup failed for PU='{}'", getPersistenceUnitName(), err);
+                  promise.fail(err);
+              });
+        });
+
+        return List.of(promise.future());
     }
 
     /**
@@ -91,7 +102,7 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
      */
     @Override
     public void onDestroy() {
-        IGuiceContext.get(Key.get(PersistService.class, Names.named("ActivityMaster-Test"))).stop();
+        IGuiceContext.get(Key.get(PersistService.class, Names.named(getPersistenceUnitName()))).stop();
         log.info("🛑 PersistService stopped");
     }
 
