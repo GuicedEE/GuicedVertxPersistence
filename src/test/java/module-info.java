@@ -1,12 +1,12 @@
 import com.guicedee.client.services.lifecycle.IGuiceModule;
-import com.guicedee.vertxpersistence.DatabaseModule;
-import com.guicedee.vertxpersistence.test.TestModulePostgresReactive;
+import com.guicedee.persistence.DatabaseModule;
+import com.guicedee.persistence.test.TestModulePostgresReactive;
 
-open module guiced.vertx.persistence.test {
+open module guiced.persistence.test {
 
     requires com.google.guice;
     requires transitive org.testcontainers;
-    requires transitive com.guicedee.vertxpersistence;
+    requires transitive com.guicedee.persistence;
     requires transitive com.sun.jna;
 
     provides IGuiceModule with TestModulePostgresReactive;

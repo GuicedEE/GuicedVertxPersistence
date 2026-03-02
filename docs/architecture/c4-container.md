@@ -1,6 +1,6 @@
 # C4 Level 2 — Container View
 
-The persistence library breaks down into configuration helpers, runtime bridges, and reactive service providers. The following diagram summarizes the containers inside `com.guicedee.vertxpersistence` and how they interact with external runtimes.
+The persistence library breaks down into configuration helpers, runtime bridges, and reactive service providers. The following diagram summarizes the containers inside `com.guicedee.persistence` and how they interact with external runtimes.
 
 ```mermaid
 C4Container

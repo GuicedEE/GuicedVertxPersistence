@@ -10,7 +10,7 @@
     </parent>
 
     <groupId>com.guicedee</groupId>
-    <artifactId>guiced-vertx-persistence</artifactId>
+    <artifactId>persistence</artifactId>
 
     <packaging>jar</packaging>
     <version>2.0.0-SNAPSHOT</version>
@@ -18,7 +18,7 @@
     <description>Integrates Vert.x Persistence</description>
 
     <properties>
-        <project.scm.nameUrl>/GuicedEE/GuicedVertxWeb</project.scm.nameUrl>
+        <project.scm.nameUrl>/GuicedEE/GuicedVertxPersistence</project.scm.nameUrl>
         <ignore.moditect>true</ignore.moditect>
         <flatten.pom>false</flatten.pom>
     </properties>
@@ -27,13 +27,6 @@
         <dependency>
             <groupId>com.ongres.scram</groupId>
             <artifactId>scram-client</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <dependency>
-            <groupId>com.ongres.scram</groupId>
-            <artifactId>scram-client</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -45,12 +38,11 @@
         <dependency>
             <groupId>com.ongres.scram</groupId>
             <artifactId>scram-common</artifactId>
-            <version>${scram.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.guicedee.microprofile</groupId>
-            <artifactId>guiced-microprofile-config</artifactId>
+            <artifactId>config</artifactId>
         </dependency>
 
         <dependency>
@@ -60,26 +52,18 @@
             <version>${vertx.version}</version>
         </dependency>
 
-        <!--
-
-                <dependency>
-                    <groupId>io.vertx</groupId>
-                    <artifactId>vertx-mysql-client</artifactId>
-                </dependency>-->
-
-
         <dependency>
             <groupId>com.guicedee</groupId>
-            <artifactId>guiced-vertx</artifactId>
+            <artifactId>vertx</artifactId>
         </dependency>
 
         <dependency>
             <groupId>com.guicedee</groupId>
-            <artifactId>guice-inject-client</artifactId>
+            <artifactId>client</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>com.guicedee.services</groupId>
+            <groupId>com.guicedee.modules.representations</groupId>
             <artifactId>json-representation</artifactId>
         </dependency>
 
@@ -94,23 +78,23 @@
         </dependency>
 
         <dependency>
-            <groupId>com.guicedee.services</groupId>
+            <groupId>com.guicedee.modules.services</groupId>
             <artifactId>hibernate-reactive</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>com.guicedee.services</groupId>
+            <groupId>com.guicedee.modules.services</groupId>
             <artifactId>hibernate-core</artifactId>
         </dependency>
 
         <dependency>
             <groupId>com.guicedee</groupId>
-            <artifactId>guice-injection</artifactId>
+            <artifactId>inject</artifactId>
         </dependency>
 
         <dependency>
             <groupId>com.guicedee</groupId>
-            <artifactId>guiced-rest-services</artifactId>
+            <artifactId>rest</artifactId>
             <optional>true</optional>
         </dependency>
 
@@ -127,7 +111,7 @@
         </dependency>
 
         <dependency>
-            <groupId>com.guicedee.services</groupId>
+            <groupId>com.guicedee.modules.services</groupId>
             <artifactId>testcontainers</artifactId>
             <scope>test</scope>
         </dependency>
@@ -144,15 +128,8 @@
             <scope>test</scope>
         </dependency>
 
-    <!--    <dependency>
-            <groupId>org.junit.vintage</groupId>
-            <artifactId>junit-vintage-engine</artifactId>
-            <scope>test</scope>
-            <optional>true</optional>
-        </dependency>
--->
         <dependency>
-            <groupId>com.guicedee.services</groupId>
+            <groupId>com.guicedee.modules.services</groupId>
             <artifactId>vertx-mutiny</artifactId>
         </dependency>
 
@@ -165,13 +142,6 @@
             <groupId>jakarta.transaction</groupId>
             <artifactId>jakarta.transaction-api</artifactId>
         </dependency>
-
-        <!--        <dependency>
-                    <groupId>com.guicedee.services</groupId>
-                    <artifactId>postgresql</artifactId>
-                    <scope>test</scope>
-                </dependency>-->
-
     </dependencies>
 
 
@@ -198,7 +168,7 @@
                 <configuration>
                     <argLine>
                         --add-reads org.jboss.logging=org.hibernate.reactive
-                        --add-reads org.hibernate.orm.core=guiced.vertx.persistence.test
+                        --add-reads org.hibernate.orm.core=guiced.persistence.test
                         --add-exports io.vertx.sql.client/io.vertx.sqlclient.impl=org.hibernate.reactive
                     </argLine>
                 </configuration>
@@ -225,7 +195,7 @@
                         <arg>--add-reads</arg>
                         <arg>org.jboss.logging=org.hibernate.reactive</arg>
                         <arg>--add-reads</arg>
-                        <arg>org.hibernate.orm.core=guiced.vertx.persistence.test</arg>
+                        <arg>org.hibernate.orm.core=guiced.persistence.test</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>

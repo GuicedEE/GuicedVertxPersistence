@@ -1,6 +1,6 @@
 # Architecture Index
 
-This directory centralizes the architecture-first artifacts required by the Rules Repository staging workflow. Each file is a text-based diagram or artifact that explains the current `com.guicedee.vertxpersistence` implementation.
+This directory centralizes the architecture-first artifacts required by the Rules Repository staging workflow. Each file is a text-based diagram or artifact that explains the current `com.guicedee.persistence` implementation.
 
 | Artifact | Purpose |
 | --- | --- |

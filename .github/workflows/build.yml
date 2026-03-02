@@ -1,0 +1,19 @@
+name: GuicedEE Persistence Library
+on:
+  workflow_dispatch:
+    inputs:
+      centralRelease:
+        type: boolean
+        description: Run a release to maven central
+        default: false
+  push:
+jobs:
+  GuicedPersistence:
+    uses: GuicedEE/Workflows/.github/workflows/projects.yml@master
+    with:
+      baseDir: ''
+      name: 'Guiced Persistence'
+      sonarProjectName: 'GuicedEE_GuicedVertxPersistence'
+      sonarOrganization: 'guicedee'
+      publishToCentral: ${{inputs.centralRelease}}
+    secrets: inherit

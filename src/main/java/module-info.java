@@ -1,28 +1,28 @@
 import com.guicedee.client.services.lifecycle.IGuiceConfigurator;
-import com.guicedee.vertxpersistence.IPropertiesConnectionInfoReader;
-import com.guicedee.vertxpersistence.IPropertiesEntityManagerReader;
-import com.guicedee.vertxpersistence.implementations.GuicedConfigurator;
-import com.guicedee.vertxpersistence.implementations.db2.DB2HibernateProperties;
-import com.guicedee.vertxpersistence.implementations.hibernateproperties.HibernateEntityManagerProperties;
-import com.guicedee.vertxpersistence.implementations.mysql.MySqlHibernateProperties;
-import com.guicedee.vertxpersistence.implementations.oracle.OracleHibernateProperties;
-import com.guicedee.vertxpersistence.implementations.postgres.PostgresHibernateProperties;
-import com.guicedee.vertxpersistence.implementations.sqlserver.SqlServerHibernateProperties;
-import com.guicedee.vertxpersistence.implementations.systemproperties.SystemEnvironmentVariablesPropertiesReader;
+import com.guicedee.persistence.IPropertiesConnectionInfoReader;
+import com.guicedee.persistence.IPropertiesEntityManagerReader;
+import com.guicedee.persistence.implementations.GuicedConfigurator;
+import com.guicedee.persistence.implementations.db2.DB2HibernateProperties;
+import com.guicedee.persistence.implementations.hibernateproperties.HibernateEntityManagerProperties;
+import com.guicedee.persistence.implementations.mysql.MySqlHibernateProperties;
+import com.guicedee.persistence.implementations.oracle.OracleHibernateProperties;
+import com.guicedee.persistence.implementations.postgres.PostgresHibernateProperties;
+import com.guicedee.persistence.implementations.sqlserver.SqlServerHibernateProperties;
+import com.guicedee.persistence.implementations.systemproperties.SystemEnvironmentVariablesPropertiesReader;
 import org.hibernate.service.spi.ServiceContributor;
 
-module com.guicedee.vertxpersistence {
+module com.guicedee.persistence {
 
-    exports com.guicedee.vertxpersistence;
-    exports com.guicedee.vertxpersistence.annotations;
-    //exports com.guicedee.vertxpersistence.bind;
-    //exports com.guicedee.vertxpersistence.implementations;
-    exports com.guicedee.vertxpersistence.implementations.postgres;
-    exports com.guicedee.vertxpersistence.implementations.mysql;
-    exports com.guicedee.vertxpersistence.implementations.db2;
-    exports com.guicedee.vertxpersistence.implementations.sqlserver;
-    exports com.guicedee.vertxpersistence.implementations.oracle;
-    exports com.guicedee.vertxpersistence.implementations.vertxsql;
+    exports com.guicedee.persistence;
+    exports com.guicedee.persistence.annotations;
+    //exports com.guicedee.persistence.bind;
+    //exports com.guicedee.persistence.implementations;
+    exports com.guicedee.persistence.implementations.postgres;
+    exports com.guicedee.persistence.implementations.mysql;
+    exports com.guicedee.persistence.implementations.db2;
+    exports com.guicedee.persistence.implementations.sqlserver;
+    exports com.guicedee.persistence.implementations.oracle;
+    exports com.guicedee.persistence.implementations.vertxsql;
 
     requires transitive org.hibernate.reactive;
     requires transitive com.guicedee.vertx;
@@ -40,8 +40,8 @@ module com.guicedee.vertxpersistence {
     requires static io.vertx.sql.client.mssql;
     requires transitive io.vertx.sql.client;
 
-    uses com.guicedee.vertxpersistence.IPropertiesConnectionInfoReader;
-    uses com.guicedee.vertxpersistence.IPropertiesEntityManagerReader;
+    uses com.guicedee.persistence.IPropertiesConnectionInfoReader;
+    uses com.guicedee.persistence.IPropertiesEntityManagerReader;
 
     provides IGuiceConfigurator with GuicedConfigurator;
     provides IPropertiesEntityManagerReader with SystemEnvironmentVariablesPropertiesReader, HibernateEntityManagerProperties,
@@ -50,23 +50,23 @@ module com.guicedee.vertxpersistence {
             OracleHibernateProperties,
             PostgresHibernateProperties,
             SqlServerHibernateProperties;
-    provides IPropertiesConnectionInfoReader with com.guicedee.vertxpersistence.implementations.hibernateproperties.HibernateDefaultConnectionBaseBuilder
+    provides IPropertiesConnectionInfoReader with com.guicedee.persistence.implementations.hibernateproperties.HibernateDefaultConnectionBaseBuilder
             ;
 
-    provides ServiceContributor with com.guicedee.vertxpersistence.implementations.VertxServiceContributor;
+    provides ServiceContributor with com.guicedee.persistence.implementations.VertxServiceContributor;
 
-    opens com.guicedee.vertxpersistence to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
-    opens com.guicedee.vertxpersistence.annotations to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
-    opens com.guicedee.vertxpersistence.bind to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
-    opens com.guicedee.vertxpersistence.implementations to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
-    opens com.guicedee.vertxpersistence.implementations.postgres to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
-    opens com.guicedee.vertxpersistence.implementations.mysql to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
-    opens com.guicedee.vertxpersistence.implementations.db2 to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
-    opens com.guicedee.vertxpersistence.implementations.sqlserver to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
-    opens com.guicedee.vertxpersistence.implementations.oracle to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
-    opens com.guicedee.vertxpersistence.implementations.vertxsql to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
+    opens com.guicedee.persistence to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
+    opens com.guicedee.persistence.annotations to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
+    opens com.guicedee.persistence.bind to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
+    opens com.guicedee.persistence.implementations to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
+    opens com.guicedee.persistence.implementations.postgres to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
+    opens com.guicedee.persistence.implementations.mysql to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
+    opens com.guicedee.persistence.implementations.db2 to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
+    opens com.guicedee.persistence.implementations.sqlserver to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
+    opens com.guicedee.persistence.implementations.oracle to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
+    opens com.guicedee.persistence.implementations.vertxsql to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
 
-    exports com.guicedee.vertxpersistence.implementations;
-    exports com.guicedee.vertxpersistence.bind;
-    exports com.guicedee.vertxpersistence.implementations.systemproperties;
+    exports com.guicedee.persistence.implementations;
+    exports com.guicedee.persistence.bind;
+    exports com.guicedee.persistence.implementations.systemproperties;
 }

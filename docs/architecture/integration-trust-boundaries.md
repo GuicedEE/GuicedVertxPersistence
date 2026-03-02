@@ -1,6 +1,6 @@
 # Integration & Trust Boundaries — GuicedEE Persistence
 
-This artifact captures the dependency map, trust boundaries, and threat considerations for `com.guicedee.vertxpersistence` as it bridges GuicedEE, Hibernate Reactive 7, Vert.x 5, and external databases.
+This artifact captures the dependency map, trust boundaries, and threat considerations for `com.guicedee.persistence` as it bridges GuicedEE, Hibernate Reactive 7, Vert.x 5, and external databases.
 
 ## Dependency / Integration Map
 ```mermaid
@@ -45,7 +45,7 @@ flowchart TB
 ## Trust Boundaries & Threat Notes
 - **Config boundary:** Property readers pull from environment and MicroProfile/Jakarta Config. Validate prefixes and strip sensitive values from logs (Log4j2 with structured markers) to avoid leaking credentials across trust lines.
 - **Reactive boundary:** `Mutiny.SessionFactory` is exposed to Vert.x callers; enforce CRTP-based builders to prevent accidental mutable sharing. Constrain `MutinySessionFactoryProvider` to return immutable references.
-- **Data boundary:** External RDBMS is untrusted; ensure connection info enforces TLS flags and JDBC drivers from `com.guicedee.services` artifacts per JPMS notes.
+- **Data boundary:** External RDBMS is untrusted; ensure connection info enforces TLS flags and JDBC drivers from `com.guicedee.modules.services` artifacts per JPMS notes.
 - **ServiceLoader inputs:** `IProperties*Reader` implementations are pluggable; reject unknown prefixes and sanitize property maps before applying them to `JtaPersistModule`.
 - **Lifecycle:** `JtaPersistService` start/stop hooks must be idempotent and guard against double-start to avoid leaking connections across module reloads.
 
