@@ -38,10 +38,10 @@ public class TestMultiConnectionsWithSession {
     static void init() {
         log.info("Starting TestMultiConnectionsWithSession");
 
-        IGuiceContext.contexts.clear();
-        IGuiceContext.registerModuleForScanning.clear();
-        IGuiceContext.modules.clear();
-        IGuiceContext.allLoadedServices.clear();
+        // Reset persistence statics
+        com.guicedee.persistence.DatabaseModule.resetDescriptors();
+        com.guicedee.persistence.bind.JtaPersistModule.reset();
+        com.guicedee.persistence.implementations.VertxPersistenceModule.reset();
 
         System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
         System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.Log4j2LogDelegateFactory");

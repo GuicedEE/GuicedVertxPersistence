@@ -42,6 +42,13 @@ public final class JtaPersistModule extends PersistModule
     private static boolean defaultSet = false;
 
     /**
+     * Resets the default binding flag, allowing re-initialization on the next context boot.
+     */
+    public static void reset() {
+        defaultSet = false;
+    }
+
+    /**
      * Creates a persistence module for a specific JPA unit and connection info.
      *
      * @param jpaUnit the persistence unit name

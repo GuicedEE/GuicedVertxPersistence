@@ -15,6 +15,7 @@ open module guiced.persistence.test {
     requires io.vertx.sql.client;
     requires io.vertx.sql.client.pg;
     requires com.ongres.scram.client;
+    requires com.guicedee.vertx;
     //jdbc
     //requires org.postgresql.jdbc;
 

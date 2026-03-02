@@ -36,6 +36,13 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
     private static final List<PersistenceUnitDescriptor> PersistenceUnitDescriptors = new ArrayList<>();
 
     /**
+     * Resets the cached persistence unit descriptors, allowing re-parsing on the next context boot.
+     */
+    public static void resetDescriptors() {
+        PersistenceUnitDescriptors.clear();
+    }
+
+    /**
      * Parses persistence.xml resources and registers lifecycle hooks.
      */
     public DatabaseModule() {
@@ -87,8 +94,15 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
      */
     @Override
     public void onDestroy() {
-        IGuiceContext.get(Key.get(PersistService.class, Names.named(getPersistenceUnitName()))).stop();
+        try {
+            IGuiceContext.get(Key.get(PersistService.class, Names.named(getPersistenceUnitName()))).stop();
+        } catch (Throwable t) {
+            log.debug("⚠️ PersistService stop failed: {}", t.getMessage());
+        }
         log.info("🛑 PersistService stopped");
+        resetDescriptors();
+        JtaPersistModule.reset();
+        VertxPersistenceModule.reset();
     }
 
     /**

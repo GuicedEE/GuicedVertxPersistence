@@ -51,6 +51,13 @@ public class VertxPersistenceModule extends AbstractModule implements IGuiceModu
 
     private static final String DEFAULT_PACKAGE = "";
 
+    public static void reset() {
+        connectionModules.clear();
+        sqlClientMap.clear();
+        entityManagerAnnotations.clear();
+        packageNamesByEntityManager.clear();
+    }
+
     /**
      * Scans for persistence modules, validates entity manager naming, and binds
      * the default and named EntityManager instances.

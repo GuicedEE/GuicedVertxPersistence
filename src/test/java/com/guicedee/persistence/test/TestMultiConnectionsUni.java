@@ -47,16 +47,13 @@ public class TestMultiConnectionsUni {
     static void init() {
         log.info("Starting TestMultiConnectionsUni");
 
-        IGuiceContext.contexts.clear();
-        IGuiceContext.registerModuleForScanning.clear();
-        IGuiceContext.modules.clear();
-        IGuiceContext.allLoadedServices.clear();
-
         System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
         System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.Log4j2LogDelegateFactory");
         System.setProperty("log4j.level", "INFO");
         LogUtils.addHighlightedConsoleLogger(Level.DEBUG);
         IGuiceContext.registerModule("guiced.persistence.test");
+        IGuiceContext.registerModule("com.guicedee.persistence");
+
 
         postgresContainer.start();
 

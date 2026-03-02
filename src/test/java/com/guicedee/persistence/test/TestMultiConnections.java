@@ -56,16 +56,13 @@ public class TestMultiConnections {
     @BeforeAll
     static void init() {
         log.info("Starting TestMultiConnections");
-
-        IGuiceContext.contexts.clear();
-        IGuiceContext.registerModuleForScanning.clear();
-        IGuiceContext.modules.clear();
-        IGuiceContext.allLoadedServices.clear();
+        // Reset persistence statics
+        IGuiceContext.registerModule("guiced.persistence.test");
+        IGuiceContext.registerModule("com.guicedee.persistence");
 
         System.setProperty("java.util.logging.manager", "org.apache.logging.log4j.jul.LogManager");
         System.setProperty("vertx.logger-delegate-factory-class-name", "io.vertx.core.logging.Log4j2LogDelegateFactory");
         System.setProperty("log4j.level", "INFO");
-        IGuiceContext.registerModule("guiced.persistence.test");
 
         LogUtils.addHighlightedConsoleLogger(Level.DEBUG);
 
