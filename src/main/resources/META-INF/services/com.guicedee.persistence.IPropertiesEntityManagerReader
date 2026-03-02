@@ -1,0 +1,7 @@
+com.guicedee.persistence.implementations.hibernateproperties.HibernateEntityManagerProperties
+com.guicedee.persistence.implementations.systemproperties.SystemEnvironmentVariablesPropertiesReader
+com.guicedee.persistence.implementations.postgres.PostgresHibernateProperties
+com.guicedee.persistence.implementations.db2.DB2HibernateProperties
+com.guicedee.persistence.implementations.mysql.MySqlHibernateProperties
+com.guicedee.persistence.implementations.oracle.OracleHibernateProperties
+com.guicedee.persistence.implementations.sqlserver.SqlServerHibernateProperties
