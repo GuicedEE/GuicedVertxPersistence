@@ -461,6 +461,7 @@ com.guicedee.persistence
  ├── org.hibernate.orm.core           (Hibernate ORM — persistence.xml parsing, entity management)
  ├── com.guicedee.vertx               (Vert.x lifecycle, VertXPreStartup)
  ├── com.guicedee.guicedinjection     (GuicedEE — scanning, DI, lifecycle)
+ ├── com.guicedee.microprofile.config (MicroProfile Config — @ConfigProperty injection, SmallRye Config)
  ├── io.vertx.sql.client              (Vert.x SQL Client — pooled connections)
  ├── io.vertx.sql.client.pg           (Vert.x PostgreSQL client — optional)
  ├── io.vertx.sql.client.mssql        (Vert.x MSSQL client — optional)
