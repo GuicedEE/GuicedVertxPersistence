@@ -8,7 +8,7 @@ import com.guicedee.client.services.lifecycle.IGuiceConfigurator;
  * Enables classpath, annotation, field, and method scanning with relaxed visibility
  * so persistence annotations and bindings are discovered consistently.
  */
-public class GuicedConfigurator implements IGuiceConfigurator
+public class GuicedConfigurator implements IGuiceConfigurator<GuicedConfigurator>
 {
     /**
      * Applies scanning configuration suitable for persistence wiring.

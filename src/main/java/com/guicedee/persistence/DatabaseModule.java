@@ -117,10 +117,12 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
             log.error("❌ Unable to register persistence unit with name {} - No persistence unit containing this name was found.", getPersistenceUnitName());
             return;
         }
-        for (IPropertiesEntityManagerReader<?> entityManagerReader : IGuiceContext
+        @SuppressWarnings("unchecked")
+        Set<IPropertiesEntityManagerReader<?>> entityManagerReaders = (Set) IGuiceContext
                 .instance()
                 .getLoader(IPropertiesEntityManagerReader.class, true,
-                        ServiceLoader.load(IPropertiesEntityManagerReader.class))) {
+                        ServiceLoader.load(IPropertiesEntityManagerReader.class));
+        for (IPropertiesEntityManagerReader<?> entityManagerReader : entityManagerReaders) {
             if (!entityManagerReader.applicable(pu)) {
                 continue;
             }

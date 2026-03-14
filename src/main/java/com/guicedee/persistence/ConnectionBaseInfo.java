@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
+import java.util.Set;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
@@ -114,12 +115,14 @@ public abstract class ConnectionBaseInfo
 	 * @param filteredProperties properties scoped to the persistence unit
 	 * @return this instance for chaining
 	 */
+	@SuppressWarnings("unchecked")
 	public ConnectionBaseInfo populateFromProperties(PersistenceUnitDescriptor unit, Properties filteredProperties)
 	{
-		for (IPropertiesConnectionInfoReader<?> connectionInfoReader : IGuiceContext
+		Set<IPropertiesConnectionInfoReader<?>> readers = (Set) IGuiceContext
 				.instance()
 				.getLoader(IPropertiesConnectionInfoReader.class, true, ServiceLoader.load(
-						IPropertiesConnectionInfoReader.class)))
+						IPropertiesConnectionInfoReader.class));
+		for (IPropertiesConnectionInfoReader<?> connectionInfoReader : readers)
 		{
 			connectionInfoReader.populateConnectionBaseInfo(unit, filteredProperties, this);
 		}
