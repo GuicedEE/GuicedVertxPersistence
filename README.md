@@ -2,7 +2,7 @@
 
 [![Build](https://github.com/GuicedEE/GuicedVertxPersistence/actions/workflows/build.yml/badge.svg)](https://github.com/GuicedEE/GuicedVertxPersistence/actions/workflows/build.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/com.guicedee/persistence)](https://central.sonatype.com/artifact/com.guicedee/persistence)
-[![Maven Snapshot](https://img.shields.io/nexus/s/com.guicedee/persistence?server=https%3A%2F%2Foss.sonatype.org&label=Maven%20Snapshot)](https://oss.sonatype.org/content/repositories/snapshots/com/guicedee/persistence/)
+[![Snapshot](https://img.shields.io/badge/Snapshot-2.0.0-SNAPSHOT-orange)](https://github.com/GuicedEE/Packages/packages/maven/com.guicedee.persistence)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue)](https://www.apache.org/licenses/LICENSE-2.0)
 
 ![Java 25+](https://img.shields.io/badge/Java-25%2B-green)
@@ -121,35 +121,63 @@ public class UserService {
 
 ## 📐 Architecture
 
-```
-Startup
-  IGuiceContext.instance()
-   └─ IGuiceConfigurator hooks
-       └─ GuicedConfigurator             (enables annotation, field, method scanning)
-   └─ IGuiceModule hooks
-       └─ MyDatabaseModule (extends DatabaseModule)
-           ├─ Parse persistence.xml       (PersistenceXmlParser)
-           ├─ IPropertiesEntityManagerReader SPIs
-           │   ├─ SystemEnvironmentVariablesPropertiesReader (${VAR} resolution)
-           │   ├─ HibernateEntityManagerProperties
-           │   └─ PostgresHibernateProperties / MySql... / Oracle... / SqlServer... / DB2...
-           ├─ IPropertiesConnectionInfoReader SPIs
-           │   └─ HibernateDefaultConnectionBaseBuilder (maps jakarta.persistence.jdbc.*)
-           ├─ ConnectionBaseInfo.populateFromProperties()
-           ├─ ConnectionBaseInfo.toPooledDatasource()  (Vert.x SQL pool init)
-           └─ JtaPersistModule
-               ├─ bind PersistService @Named("mydb")
-               └─ bind Mutiny.SessionFactory @Named("mydb") + default
-       └─ VertxPersistenceModule
-           ├─ Validate @EntityManager annotations
-           ├─ Process package-level @EntityManager
-           └─ Bind default EntityManager / SessionFactory
-   └─ IGuicePostStartup hooks
-       └─ DatabaseModule.postLoad()
-           └─ PersistService.start()       (creates EntityManagerFactory on Vert.x context)
-   └─ IGuicePreDestroy hooks
-       └─ DatabaseModule.onDestroy()
-           └─ PersistService.stop()        (closes SessionFactory + EntityManagerFactory)
+```mermaid
+flowchart TD
+    n1["Startup"]
+    n2["IGuiceContext.instance()"]
+    n1 --> n2
+    n3["IGuiceConfigurator hooks"]
+    n2 --> n3
+    n4["GuicedConfigurator<br/>enables annotation, field, method scanning"]
+    n3 --> n4
+    n5["IGuiceModule hooks"]
+    n2 --> n5
+    n6["MyDatabaseModule<br/>extends DatabaseModule"]
+    n5 --> n6
+    n7["Parse persistence.xml<br/>PersistenceXmlParser"]
+    n6 --> n7
+    n8["IPropertiesEntityManagerReader SPIs"]
+    n6 --> n8
+    n9["SystemEnvironmentVariablesPropertiesReader<br/>${VAR} resolution"]
+    n6 --> n9
+    n10["HibernateEntityManagerProperties"]
+    n6 --> n10
+    n11["PostgresHibernateProperties / MySql... / Oracle... / SqlServer... / DB2..."]
+    n6 --> n11
+    n12["IPropertiesConnectionInfoReader SPIs"]
+    n6 --> n12
+    n13["HibernateDefaultConnectionBaseBuilder<br/>maps jakarta.persistence.jdbc.*"]
+    n6 --> n13
+    n14["ConnectionBaseInfo.populateFromProperties()"]
+    n6 --> n14
+    n15["ConnectionBaseInfo.toPooledDatasource()<br/>Vert.x SQL pool init"]
+    n6 --> n15
+    n16["JtaPersistModule"]
+    n6 --> n16
+    n17["bind PersistService @Named('mydb')"]
+    n16 --> n17
+    n18["bind Mutiny.SessionFactory @Named('mydb') + default"]
+    n16 --> n18
+    n19["VertxPersistenceModule"]
+    n5 --> n19
+    n20["Validate @EntityManager annotations"]
+    n19 --> n20
+    n21["Process package-level @EntityManager"]
+    n19 --> n21
+    n22["Bind default EntityManager / SessionFactory"]
+    n19 --> n22
+    n23["IGuicePostStartup hooks"]
+    n2 --> n23
+    n24["DatabaseModule.postLoad()"]
+    n23 --> n24
+    n25["PersistService.start()<br/>creates EntityManagerFactory on Vert.x context"]
+    n24 --> n25
+    n26["IGuicePreDestroy hooks"]
+    n2 --> n26
+    n27["DatabaseModule.onDestroy()"]
+    n26 --> n27
+    n28["PersistService.stop()<br/>closes SessionFactory + EntityManagerFactory"]
+    n27 --> n28
 ```
 
 ### Hibernate Reactive integration
@@ -437,36 +465,50 @@ import com.guicedee.persistence.annotations.EntityManager;
 
 ## 🔄 Startup Flow
 
-```
-IGuiceContext.instance()
- └─ IGuiceConfigurator hooks
-     └─ GuicedConfigurator                   (enables rich classpath scanning)
- └─ IGuiceModule hooks
-     └─ DatabaseModule subclasses            (parse persistence.xml, build ConnectionBaseInfo)
-         └─ JtaPersistModule                 (bind PersistService + Mutiny.SessionFactory)
-     └─ VertxPersistenceModule               (validate, bind defaults, process @EntityManager)
- └─ Hibernate ServiceContributor SPI
-     └─ VertxServiceContributor              (registers shared Vertx instance)
- └─ IGuicePostStartup hooks
-     └─ DatabaseModule.postLoad()            (PersistService.start() → EntityManagerFactory)
- └─ IGuicePreDestroy hooks
-     └─ DatabaseModule.onDestroy()           (PersistService.stop() → close factory)
+```mermaid
+flowchart TD
+    n1["IGuiceContext.instance()"]
+    n2["IGuiceConfigurator hooks"]
+    n1 --> n2
+    n3["GuicedConfigurator<br/>enables rich classpath scanning"]
+    n2 --> n3
+    n4["IGuiceModule hooks"]
+    n1 --> n4
+    n5["DatabaseModule subclasses<br/>parse persistence.xml, build ConnectionBaseInfo"]
+    n4 --> n5
+    n6["JtaPersistModule<br/>bind PersistService + Mutiny.SessionFactory"]
+    n5 --> n6
+    n7["VertxPersistenceModule<br/>validate, bind defaults, process @EntityManager"]
+    n4 --> n7
+    n8["Hibernate ServiceContributor SPI"]
+    n1 --> n8
+    n9["VertxServiceContributor<br/>registers shared Vertx instance"]
+    n8 --> n9
+    n10["IGuicePostStartup hooks"]
+    n1 --> n10
+    n11["DatabaseModule.postLoad()<br/>PersistService.start() → EntityManagerFactory"]
+    n10 --> n11
+    n12["IGuicePreDestroy hooks"]
+    n1 --> n12
+    n13["DatabaseModule.onDestroy()<br/>PersistService.stop() → close factory"]
+    n12 --> n13
 ```
 
 ## 🗺️ Module Graph
 
-```
-com.guicedee.persistence
- ├── org.hibernate.reactive           (Hibernate Reactive — Mutiny.SessionFactory)
- ├── org.hibernate.orm.core           (Hibernate ORM — persistence.xml parsing, entity management)
- ├── com.guicedee.vertx               (Vert.x lifecycle, VertXPreStartup)
- ├── com.guicedee.guicedinjection     (GuicedEE — scanning, DI, lifecycle)
- ├── com.guicedee.microprofile.config (MicroProfile Config — @ConfigProperty injection, SmallRye Config)
- ├── io.vertx.sql.client              (Vert.x SQL Client — pooled connections)
- ├── io.vertx.sql.client.pg           (Vert.x PostgreSQL client — optional)
- ├── io.vertx.sql.client.mssql        (Vert.x MSSQL client — optional)
- ├── jakarta.transaction              (JTA transactions)
- └── com.guicedee.rest                (REST integration — optional)
+```mermaid
+flowchart LR
+    com_guicedee_persistence["com.guicedee.persistence"]
+    com_guicedee_persistence --> org_hibernate_reactive["org.hibernate.reactive<br/>Hibernate Reactive — Mutiny.SessionFactory"]
+    com_guicedee_persistence --> org_hibernate_orm_core["org.hibernate.orm.core<br/>Hibernate ORM — persistence.xml parsing, entity management"]
+    com_guicedee_persistence --> com_guicedee_vertx["com.guicedee.vertx<br/>Vert.x lifecycle, VertXPreStartup"]
+    com_guicedee_persistence --> com_guicedee_guicedinjection["com.guicedee.guicedinjection<br/>GuicedEE — scanning, DI, lifecycle"]
+    com_guicedee_persistence --> com_guicedee_microprofile_config["com.guicedee.microprofile.config<br/>MicroProfile Config — @ConfigProperty injection, SmallRye Config"]
+    com_guicedee_persistence --> io_vertx_sql_client["io.vertx.sql.client<br/>Vert.x SQL Client — pooled connections"]
+    com_guicedee_persistence --> io_vertx_sql_client_pg["io.vertx.sql.client.pg<br/>Vert.x PostgreSQL client — optional"]
+    com_guicedee_persistence --> io_vertx_sql_client_mssql["io.vertx.sql.client.mssql<br/>Vert.x MSSQL client — optional"]
+    com_guicedee_persistence --> jakarta_transaction["jakarta.transaction<br/>JTA transactions"]
+    com_guicedee_persistence --> com_guicedee_rest["com.guicedee.rest<br/>REST integration — optional"]
 ```
 
 ## 🧩 JPMS
