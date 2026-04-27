@@ -44,6 +44,16 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
 
     /**
      * Parses persistence.xml resources and registers lifecycle hooks.
+     *
+     * <p><b>Note:</b> This constructor does <em>not</em> call
+     * {@code loadPostStartupServices().add(this)} or
+     * {@code loadPreDestroyServices().add(this)} because this class is
+     * already registered as a {@code provides IGuicePostStartup} /
+     * {@code IGuicePreDestroy} in the JPMS {@code module-info.java}.
+     * The {@link java.util.ServiceLoader} handles discovery automatically.
+     * Calling those methods from the constructor caused infinite recursion
+     * (StackOverflowError) because the service loader re-instantiates the
+     * same provider while it is still being constructed.</p>
      */
     public DatabaseModule() {
         if (PersistenceUnitDescriptors.isEmpty()) {
@@ -57,8 +67,6 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
                 log.debug("📋 PU Found: {}", desc.getName());
             }
         }
-        GuiceContext.instance().loadPostStartupServices().add(this);
-        GuiceContext.instance().loadPreDestroyServices().add(this);
     }
 
     /**
