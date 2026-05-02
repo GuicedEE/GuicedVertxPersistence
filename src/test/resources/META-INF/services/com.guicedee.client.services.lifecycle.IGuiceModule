@@ -1,0 +1,3 @@
+com.guicedee.persistence.test.TestModulePostgresReactive
+com.guicedee.persistence.test.TestMongoModule
+com.guicedee.persistence.test.TestCassandraModule

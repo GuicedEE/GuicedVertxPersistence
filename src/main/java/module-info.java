@@ -23,6 +23,8 @@ module com.guicedee.persistence {
     exports com.guicedee.persistence.implementations.sqlserver;
     exports com.guicedee.persistence.implementations.oracle;
     exports com.guicedee.persistence.implementations.vertxsql;
+    exports com.guicedee.persistence.implementations.mongodb;
+    exports com.guicedee.persistence.implementations.cassandra;
 
     requires transitive org.hibernate.reactive;
     requires transitive com.guicedee.vertx;
@@ -38,6 +40,8 @@ module com.guicedee.persistence {
     requires transitive org.hibernate.orm.core;
     requires static io.vertx.sql.client.pg;
     requires static io.vertx.sql.client.mssql;
+    requires static io.vertx.mongo.client;
+    requires static io.vertx.cassandra.client;
     requires transitive io.vertx.sql.client;
 
     uses com.guicedee.persistence.IPropertiesConnectionInfoReader;
@@ -65,6 +69,8 @@ module com.guicedee.persistence {
     opens com.guicedee.persistence.implementations.sqlserver to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
     opens com.guicedee.persistence.implementations.oracle to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
     opens com.guicedee.persistence.implementations.vertxsql to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
+    opens com.guicedee.persistence.implementations.mongodb to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,net.bytebuddy,com.fasterxml.jackson.databind;
+    opens com.guicedee.persistence.implementations.cassandra to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,net.bytebuddy,com.fasterxml.jackson.databind;
 
     exports com.guicedee.persistence.implementations;
     exports com.guicedee.persistence.bind;

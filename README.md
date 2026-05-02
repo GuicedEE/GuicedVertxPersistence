@@ -545,6 +545,77 @@ In non-JPMS environments, `META-INF/services` discovery still works.
 | `OracleConnectionBaseInfo` | `implementations.oracle` | Oracle-specific Vert.x SQL pool creation |
 | `DB2ConnectionBaseInfo` | `implementations.db2` | DB2-specific Vert.x SQL pool creation |
 
+## 🗄️ Cassandra Support
+
+The persistence module also includes a **Cassandra** integration via the Vert.x Cassandra Client — a wide-column NoSQL store that does **not** use JPA/Hibernate.
+
+### Quick Start (Cassandra)
+
+**Step 1** — Create a `CassandraModule` subclass:
+
+```java
+public class MyCassandraModule extends CassandraModule<MyCassandraModule> {
+
+    @Override
+    protected CassandraConnectionInfo getCassandraConnectionInfo() {
+        return new CassandraConnectionInfo()
+                .setName("my-cassandra")
+                .addContactPoint("localhost", 9042)
+                .setKeyspace("my_keyspace")
+                .setDefaultConnection(true);
+    }
+}
+```
+
+**Step 2** — Register via SPI (`META-INF/services/com.guicedee.client.services.lifecycle.IGuiceModule`) or JPMS `provides`.
+
+**Step 3** — Inject and use:
+
+```java
+public class MyService {
+
+    @Inject
+    private CassandraClient cassandraClient;
+
+    public void query() {
+        cassandraClient.executeWithFullFetch("SELECT * FROM my_keyspace.my_table")
+            .onComplete(result -> {
+                if (result.succeeded()) {
+                    result.result().forEach(row ->
+                        System.out.println(row.getString("name")));
+                }
+            });
+    }
+}
+```
+
+### `CassandraConnectionInfo` properties
+
+| Property | Default | Purpose |
+|---|---|---|
+| `name` | `"default"` | Logical name — used as `@Named` qualifier and shared client name |
+| `contactPoints` | empty (falls back to `localhost:9042`) | List of `host:port` contact points |
+| `keyspace` | `null` | Default keyspace (optional) |
+| `username` | `null` | Authentication username (optional) |
+| `password` | `null` | Authentication password (optional) |
+| `defaultConnection` | `true` | Bind without `@Named` as the default `CassandraClient` |
+
+### Environment variable pattern
+
+```java
+String host = System.getProperty("CASSANDRA_HOST",
+        System.getenv().getOrDefault("CASSANDRA_HOST", "localhost"));
+int port = Integer.parseInt(System.getProperty("CASSANDRA_PORT",
+        System.getenv().getOrDefault("CASSANDRA_PORT", "9042")));
+```
+
+### Key classes (Cassandra)
+
+| Class | Role |
+|---|---|
+| `CassandraModule` | Abstract Guice module — extend per Cassandra cluster; lifecycle and binding |
+| `CassandraConnectionInfo` | Configuration POJO — contact points, keyspace, credentials |
+
 ## 🧪 Testing
 
 Use Testcontainers for integration tests with real databases:

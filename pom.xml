@@ -53,6 +53,20 @@
         </dependency>
 
         <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-mongo-client</artifactId>
+            <optional>true</optional>
+            <version>${vertx.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-cassandra-client</artifactId>
+            <optional>true</optional>
+            <version>${vertx.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.guicedee</groupId>
             <artifactId>vertx</artifactId>
         </dependency>
@@ -171,6 +185,7 @@
                         --add-reads org.jboss.logging=org.hibernate.reactive
                         --add-reads org.hibernate.orm.core=guiced.persistence.test
                         --add-exports io.vertx.sql.client/io.vertx.sqlclient.impl=org.hibernate.reactive
+                        --add-exports io.vertx.cassandra.client/io.vertx.cassandra=com.guicedee.persistence,guiced.persistence.test
                     </argLine>
                 </configuration>
             </plugin>
@@ -197,6 +212,8 @@
                         <arg>org.jboss.logging=org.hibernate.reactive</arg>
                         <arg>--add-reads</arg>
                         <arg>org.hibernate.orm.core=guiced.persistence.test</arg>
+                        <arg>--add-exports</arg>
+                        <arg>io.vertx.cassandra.client/io.vertx.cassandra=com.guicedee.persistence,guiced.persistence.test</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>

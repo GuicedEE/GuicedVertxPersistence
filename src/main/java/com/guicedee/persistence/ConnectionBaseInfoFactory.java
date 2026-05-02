@@ -51,6 +51,19 @@ public class ConnectionBaseInfoFactory {
                 return new SqlServerConnectionBaseInfo();
             case "db2":
                 return new DB2ConnectionBaseInfo(xa);
+            case "mongodb":
+            case "mongo":
+                // MongoDB does not use SqlClient / ConnectionBaseInfo.
+                // Use MongoModule + MongoConnectionInfo instead.
+                throw new UnsupportedOperationException(
+                        "MongoDB is not a SQL database. Use MongoModule and MongoConnectionInfo from " +
+                        "com.guicedee.persistence.implementations.mongodb instead of DatabaseModule.");
+            case "cassandra":
+                // Cassandra does not use SqlClient / ConnectionBaseInfo.
+                // Use CassandraModule + CassandraConnectionInfo instead.
+                throw new UnsupportedOperationException(
+                        "Cassandra is not a SQL database. Use CassandraModule and CassandraConnectionInfo from " +
+                        "com.guicedee.persistence.implementations.cassandra instead of DatabaseModule.");
             default:
                 return new VertxConnectionBaseInfo(xa);
         }

@@ -1,6 +1,9 @@
 import com.guicedee.client.services.lifecycle.IGuiceModule;
 import com.guicedee.persistence.DatabaseModule;
 import com.guicedee.persistence.test.TestModulePostgresReactive;
+import com.guicedee.persistence.test.TestMongoModule;
+
+import com.guicedee.persistence.test.TestCassandraModule;
 
 open module guiced.persistence.test {
 
@@ -9,14 +12,15 @@ open module guiced.persistence.test {
     requires transitive com.guicedee.persistence;
     requires transitive com.sun.jna;
 
-    provides IGuiceModule with TestModulePostgresReactive;
+    provides IGuiceModule with TestModulePostgresReactive, TestMongoModule, TestCassandraModule;
 
     //reactive
     requires io.vertx.sql.client;
     requires io.vertx.sql.client.pg;
     requires com.ongres.scram.client;
     requires com.guicedee.vertx;
-    //jdbc
+    requires io.vertx.mongo.client;
+    requires io.vertx.cassandra.client;
     //requires org.postgresql.jdbc;
 
 
