@@ -1,3 +1,7 @@
 com.guicedee.persistence.test.TestModulePostgresReactive
 com.guicedee.persistence.test.TestMongoModule
 com.guicedee.persistence.test.TestCassandraModule
+com.guicedee.persistence.test.TestModuleMySQLReactive
+com.guicedee.persistence.test.TestModuleDB2Reactive
+com.guicedee.persistence.test.TestModuleOracleReactive
+com.guicedee.persistence.test.TestModuleMSSQLReactive

@@ -17,8 +17,8 @@ import lombok.extern.log4j.Log4j2;
  * This module therefore does <em>not</em> extend {@code DatabaseModule}; instead it
  * directly creates a shared {@link MongoClient} and binds it with an optional
  * {@code @Named} qualifier.
- * <p>
- * <h3>Usage</h3>
+ *
+ * <h2>Usage</h2>
  * <ol>
  *   <li>Subclass this class and implement {@link #getMongoConnectionInfo()}.</li>
  *   <li>Register the subclass as an {@code IGuiceModule} SPI provider.</li>

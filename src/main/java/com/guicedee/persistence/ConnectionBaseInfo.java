@@ -987,7 +987,7 @@ public abstract class ConnectionBaseInfo
 				if (getCustomProperties().containsKey("useServiceName") &&
 						Boolean.parseBoolean(getCustomProperties().get("useServiceName")))
 				{
-					jdbcUrl.append("//");
+					// EZConnect format: host:port/service_name
 					appendHostPortDatabase(jdbcUrl);
 				}
 				else

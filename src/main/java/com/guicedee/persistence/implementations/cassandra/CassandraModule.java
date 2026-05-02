@@ -16,8 +16,8 @@ import lombok.extern.log4j.Log4j2;
  * Cassandra is a wide-column NoSQL database and does <strong>not</strong> use JPA / Hibernate.
  * This module directly creates a shared {@link CassandraClient} and binds it with an optional
  * {@code @Named} qualifier.
- * <p>
- * <h3>Usage</h3>
+ *
+ * <h2>Usage</h2>
  * <ol>
  *   <li>Subclass this class and implement {@link #getCassandraConnectionInfo()}.</li>
  *   <li>Register the subclass as an {@code IGuiceModule} SPI provider.</li>

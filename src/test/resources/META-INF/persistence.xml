@@ -50,6 +50,82 @@
     </persistence-unit>
 
 
+    <persistence-unit name="testMySQLReactive" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.reactive.provider.ReactivePersistenceProvider</provider>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.use_sql_comments" value="true"/>
+
+            <property name="hibernate.connection.username" value="${mysql.user:test}"/>
+            <property name="hibernate.connection.password" value="${mysql.password:test}"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
+
+            <property name="hibernate.reactive" value="true"/>
+
+            <property name="hibernate.cache.use_second_level_cache" value="false"/>
+            <property name="hibernate.cache.use_query_cache" value="false"/>
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="testDB2Reactive" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.reactive.provider.ReactivePersistenceProvider</provider>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.use_sql_comments" value="true"/>
+
+            <property name="hibernate.connection.username" value="${db2.user:db2inst1}"/>
+            <property name="hibernate.connection.password" value="${db2.password:password}"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.DB2Dialect"/>
+
+            <property name="hibernate.reactive" value="true"/>
+
+            <property name="hibernate.cache.use_second_level_cache" value="false"/>
+            <property name="hibernate.cache.use_query_cache" value="false"/>
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="testOracleReactive" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.reactive.provider.ReactivePersistenceProvider</provider>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.use_sql_comments" value="true"/>
+
+            <property name="hibernate.connection.username" value="${oracle.user:system}"/>
+            <property name="hibernate.connection.password" value="${oracle.password:oracle}"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.OracleDialect"/>
+
+            <property name="hibernate.reactive" value="true"/>
+
+            <property name="hibernate.cache.use_second_level_cache" value="false"/>
+            <property name="hibernate.cache.use_query_cache" value="false"/>
+        </properties>
+    </persistence-unit>
+
+    <persistence-unit name="testMSSQLReactive" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.reactive.provider.ReactivePersistenceProvider</provider>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.use_sql_comments" value="true"/>
+
+            <property name="hibernate.connection.username" value="${mssql.user:sa}"/>
+            <property name="hibernate.connection.password" value="${mssql.password:YourStrong@Passw0rd}"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.SQLServerDialect"/>
+
+            <property name="hibernate.reactive" value="true"/>
+
+            <property name="hibernate.cache.use_second_level_cache" value="false"/>
+            <property name="hibernate.cache.use_query_cache" value="false"/>
+        </properties>
+    </persistence-unit>
+
     <persistence-unit name="guiceinjectionh2test" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>

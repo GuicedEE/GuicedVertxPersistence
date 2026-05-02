@@ -40,6 +40,9 @@ module com.guicedee.persistence {
     requires transitive org.hibernate.orm.core;
     requires static io.vertx.sql.client.pg;
     requires static io.vertx.sql.client.mssql;
+    requires static io.vertx.sql.client.mysql;
+    requires static io.vertx.sql.client.db2;
+    requires static io.vertx.sql.client.oracle;
     requires static io.vertx.mongo.client;
     requires static io.vertx.cassandra.client;
     requires transitive io.vertx.sql.client;
@@ -64,10 +67,10 @@ module com.guicedee.persistence {
     opens com.guicedee.persistence.bind to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
     opens com.guicedee.persistence.implementations to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
     opens com.guicedee.persistence.implementations.postgres to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
-    opens com.guicedee.persistence.implementations.mysql to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
-    opens com.guicedee.persistence.implementations.db2 to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
+    opens com.guicedee.persistence.implementations.mysql to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny,io.vertx.sql.client.mysql;
+    opens com.guicedee.persistence.implementations.db2 to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny,io.vertx.sql.client.db2;
     opens com.guicedee.persistence.implementations.sqlserver to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
-    opens com.guicedee.persistence.implementations.oracle to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
+    opens com.guicedee.persistence.implementations.oracle to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny,io.vertx.sql.client.oracle;
     opens com.guicedee.persistence.implementations.vertxsql to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,org.hibernate.orm.core,net.bytebuddy,io.smallrye.mutiny;
     opens com.guicedee.persistence.implementations.mongodb to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,net.bytebuddy,com.fasterxml.jackson.databind;
     opens com.guicedee.persistence.implementations.cassandra to com.google.guice,com.guicedee.guicedinjection,io.vertx.core,io.vertx.codegen.api,net.bytebuddy,com.fasterxml.jackson.databind;

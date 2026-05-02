@@ -61,9 +61,29 @@
 
         <dependency>
             <groupId>io.vertx</groupId>
-            <artifactId>vertx-cassandra-client</artifactId>
+            <artifactId>vertx-mysql-client</artifactId>
             <optional>true</optional>
             <version>${vertx.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-db2-client</artifactId>
+            <optional>true</optional>
+            <version>${vertx.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-oracle-client</artifactId>
+            <optional>true</optional>
+            <version>${vertx.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.guicedee.modules.services</groupId>
+            <artifactId>vertx-cassandra</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
@@ -174,6 +194,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <additionalOptions>
+                        <additionalOption>--add-reads</additionalOption>
+                        <additionalOption>org.jboss.logging=org.hibernate.reactive</additionalOption>
+                    </additionalOptions>
+                    <sourcepath>${project.basedir}/src/main/java</sourcepath>
+                </configuration>
             </plugin>
 
             <plugin>
@@ -185,7 +212,6 @@
                         --add-reads org.jboss.logging=org.hibernate.reactive
                         --add-reads org.hibernate.orm.core=guiced.persistence.test
                         --add-exports io.vertx.sql.client/io.vertx.sqlclient.impl=org.hibernate.reactive
-                        --add-exports io.vertx.cassandra.client/io.vertx.cassandra=com.guicedee.persistence,guiced.persistence.test
                     </argLine>
                 </configuration>
             </plugin>
@@ -212,8 +238,6 @@
                         <arg>org.jboss.logging=org.hibernate.reactive</arg>
                         <arg>--add-reads</arg>
                         <arg>org.hibernate.orm.core=guiced.persistence.test</arg>
-                        <arg>--add-exports</arg>
-                        <arg>io.vertx.cassandra.client/io.vertx.cassandra=com.guicedee.persistence,guiced.persistence.test</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>
