@@ -26,7 +26,7 @@ Built on [Hibernate Reactive](https://hibernate.org/reactive/) · [Vert.x SQL Cl
 <summary>Gradle (Kotlin DSL)</summary>
 
 ```kotlin
-implementation("com.guicedee:persistence:2.0.1-SNAPSHOT")
+implementation("com.guicedee:persistence:2.0.1")
 ```
 </details>
 
