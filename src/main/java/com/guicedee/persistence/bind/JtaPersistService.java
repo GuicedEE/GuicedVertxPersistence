@@ -72,10 +72,11 @@ public class JtaPersistService implements PersistService {
         if (null != persistenceProperties) {
             return Uni.createFrom().item(() -> {
                 log.debug("📋 Creating EntityManagerFactory for persistence unit: '{}'", persistenceUnitName);
+                long startTime = System.currentTimeMillis();
                 this.emFactory =
                         Persistence.createEntityManagerFactory(persistenceUnitName, persistenceProperties);
                 this.sessionFactory = this.emFactory.unwrap(Mutiny.SessionFactory.class);
-                log.info("✅ Successfully created EntityManagerFactory for persistence unit: '{}'", persistenceUnitName);
+                log.info("✅ Successfully created EntityManagerFactory for persistence unit: '{}' in {}ms", persistenceUnitName, System.currentTimeMillis() - startTime);
                 return null;
             });
         } else {
