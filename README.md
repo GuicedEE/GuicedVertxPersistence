@@ -256,6 +256,11 @@ ConnectionBaseInfo cbi = ConnectionBaseInfoFactory.createConnectionBaseInfoFromJ
 
 ### Connection properties
 
+Persistence uses Hibernate Reactive and native Vert.x SQL clients. Hibernate's
+`jakarta.persistence.jdbc.*` configuration keys do not select a blocking JDBC pool.
+The native MSSQL pool uses `MSSQLConnectOptions`; direct Vert.x connection URIs use
+`sqlserver://host:1433/database`, without the `jdbc:` prefix.
+
 | Property | Default | Purpose |
 |---|---|---|
 | `serverName` | — | Database server hostname |
@@ -278,7 +283,7 @@ Standard JPA/Jakarta persistence properties are supported:
 
 | Property | Purpose |
 |---|---|
-| `jakarta.persistence.jdbc.url` | JDBC connection URL |
+| `jakarta.persistence.jdbc.url` | Hibernate connection URL (JDBC-style configuration syntax is supported) |
 | `jakarta.persistence.jdbc.user` | Database username |
 | `jakarta.persistence.jdbc.password` | Database password |
 | `jakarta.persistence.jdbc.driver` | JDBC driver class |

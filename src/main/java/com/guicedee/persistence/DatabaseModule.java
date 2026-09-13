@@ -143,7 +143,12 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
             ConnectionBaseInfo connectionBaseInfo = getConnectionBaseInfo(pu, jdbcProperties);
             connectionBaseInfo.populateFromProperties(pu, jdbcProperties);
             String jdbcUrl = connectionBaseInfo.getJdbcUrl();
-            jdbcProperties.put("hibernate.connection.url", jdbcUrl);
+            // Hibernate Reactive's Oracle parser expects @host:port/service, while
+            // JDBC consumers use the standard @//host:port/service syntax.
+            String persistenceUrl = connectionBaseInfo.isReactive() && jdbcUrl.startsWith("jdbc:oracle:thin:@//")
+                    ? "jdbc:oracle:thin:@" + jdbcUrl.substring("jdbc:oracle:thin:@//".length())
+                    : jdbcUrl;
+            jdbcProperties.put("hibernate.connection.url", persistenceUrl);
             connectionBaseInfo.setUrl(jdbcUrl);
 
             if (connectionBaseInfo.getJndiName() == null) {

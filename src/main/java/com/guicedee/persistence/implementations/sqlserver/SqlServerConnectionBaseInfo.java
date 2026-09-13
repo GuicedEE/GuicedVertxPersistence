@@ -64,7 +64,9 @@ public class SqlServerConnectionBaseInfo extends ConnectionBaseInfo {
             io.vertx.mssqlclient.MSSQLConnectOptions connectOptions;
 
             // Set basic connection properties
-            if (getUrl() != null && !getUrl().isEmpty()) {
+            // DatabaseModule supplies a JDBC URL after resolving host, port and database.
+            // MSSQLConnectOptions accepts reactive URIs; use the resolved fields for JDBC.
+            if (getUrl() != null && !getUrl().isEmpty() && !getUrl().startsWith("jdbc:")) {
                 connectOptions = io.vertx.mssqlclient.MSSQLConnectOptions.fromUri(getUrl());
             } else {
                 connectOptions = new io.vertx.mssqlclient.MSSQLConnectOptions();
@@ -283,8 +285,8 @@ public class SqlServerConnectionBaseInfo extends ConnectionBaseInfo {
 
             // Set connection lifetime
             if (getMaxLifeTime() != null) {
-                // Convert seconds to milliseconds
-                poolOptions.setMaxLifetime(getMaxLifeTime() * 1000);
+                poolOptions.setMaxLifetime(getMaxLifeTime());
+                poolOptions.setMaxLifetimeUnit(java.util.concurrent.TimeUnit.SECONDS);
             }
 
             if (getCustomProperties().containsKey("trustServerCertificate") || (getUrl() != null && getUrl().contains("trustServerCertificate=true")) || isTrustServerCertificate()) {
@@ -295,16 +297,6 @@ public class SqlServerConnectionBaseInfo extends ConnectionBaseInfo {
                     connectOptions.setSslOptions(new io.vertx.core.net.ClientSSLOptions().setTrustAll(true));
                 }
             }
-
-            if (!Strings.isNullOrEmpty(getUrl())) {
-                return MSSQLBuilder.pool()
-                        .with(new NetClientOptions().setSsl(true).setTrustAll(true))
-                        .with(poolOptions)
-                        .connectingTo(getUrl())
-                        .using(vertx)
-                        .build();
-            }
-
 
             // Create the pool using MSSQLBuilder
             return MSSQLBuilder.pool()

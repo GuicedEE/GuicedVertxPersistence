@@ -14,6 +14,11 @@ import java.util.Properties;
 public class TestModuleDB2Reactive extends DatabaseModule<TestModuleDB2Reactive> {
 
     @Override
+    public boolean enabled() {
+        return System.getProperty("db2.host") != null;
+    }
+
+    @Override
     protected String getPersistenceUnitName() {
         return "testDB2Reactive";
     }

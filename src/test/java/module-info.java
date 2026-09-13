@@ -25,6 +25,7 @@ open module guiced.persistence.test {
     requires io.vertx.sql.client.db2;
     requires io.vertx.sql.client.oracle;
     requires io.vertx.sql.client.mssql;
+    requires com.microsoft.sqlserver.jdbc;
     requires com.ongres.scram.client;
     requires com.guicedee.vertx;
     requires io.vertx.mongo.client;

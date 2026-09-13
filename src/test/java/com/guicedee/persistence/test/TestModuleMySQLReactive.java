@@ -14,6 +14,11 @@ import java.util.Properties;
 public class TestModuleMySQLReactive extends DatabaseModule<TestModuleMySQLReactive> {
 
     @Override
+    public boolean enabled() {
+        return System.getProperty("mysql.host") != null;
+    }
+
+    @Override
     protected String getPersistenceUnitName() {
         return "testMySQLReactive";
     }

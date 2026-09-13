@@ -71,9 +71,9 @@ public class PostgresReactiveTest {
     }
 
     @Test
-    public void testReactivePostgresConnection() {
+    public void testReactivePostgresConnection() throws Exception {
         // Register the PostgreSQL reactive test module
-        IGuiceContext.registerModule("com.guicedee.guicedpersistence.test");
+        IGuiceContext.registerModule("guiced.persistence.test");
         //IGuiceContext.registerModule(new TestModulePostgresReactive());
         IGuiceContext.getContext().inject();
 
@@ -95,51 +95,7 @@ public class PostgresReactiveTest {
             log.info("Successfully got SessionFactory from Guice");
 
             // Test the session factory
-            VertXPreStartup.getVertx().runOnContext(handle -> {
-                // Test opening a session
-                log.info("Before opening session manually");
-                sessionFactory.openSession()
-                        .onItemOrFailure().invoke((session, error) -> {
-                            if (error != null) {
-                                fail("Error occurred while opening a session", error);
-                            } else {
-                                log.info("Session opened successfully");
-                            }
-                            // Ensure session is closed
-                            log.info("Closing session manually");
-                            session.close();
-                            log.info("Session closed manually");
-                        })
-                        .onFailure().invoke(error -> fail("Error occurred while opening a session", error))
-                        .await().atMost(Duration.of(50, ChronoUnit.SECONDS));
-                log.info("After manual session test");
-
-                // Test executing a query
-                log.info("Before withSession test");
-                sessionFactory.withSession(session -> {
-                            log.info("Inside withSession, session is open");
-                            session.withTransaction(tx -> {
-                                        log.info("Inside withTransaction, transaction is active");
-                                        session.createNativeQuery("SELECT 1")
-                                                .getResultList()
-                                                .onItemOrFailure()
-                                                .invoke((result, error) -> {
-                                                    if (error != null) {
-                                                        fail("Error occurred while executing a native query", error);
-                                                    } else {
-                                                        log.info("Native query result: {}", result);
-                                                    }
-                                                });
-                                        log.info("Exiting withTransaction, transaction will be committed");
-                                        return null;
-                                    })
-                                    .onFailure().invoke(error -> fail("Error occurred while executing a transaction", error));
-                            log.info("Exiting withSession, session will be closed automatically");
-                            return null;
-                        }).onFailure().invoke(error -> fail("Error occurred while creating a session", error))
-                        .await().atMost(Duration.of(50, ChronoUnit.SECONDS));
-                log.info("After withSession test");
-            });
+            ReactiveDatabaseTestSupport.assertQuery(sessionFactory, "SELECT 1");
 
         } finally {
             // Exit the scope

@@ -10,7 +10,7 @@ import lombok.extern.log4j.Log4j2;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.mssqlserver.MSSQLServerContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -39,11 +39,9 @@ public class MSSQLReactiveTest {
 
     @SuppressWarnings("resource")
     @Container
-    private static final GenericContainer<?> mssqlContainer = new GenericContainer<>("mcr.microsoft.com/mssql/server:2022-latest")
-            .withExposedPorts(1433)
-            .withEnv("ACCEPT_EULA", "Y")
-            .withEnv("MSSQL_SA_PASSWORD", MSSQL_PASSWORD)
-            .waitingFor(Wait.forListeningPort())
+    private static final MSSQLServerContainer mssqlContainer = new MSSQLServerContainer("mcr.microsoft.com/mssql/server:2022-latest")
+            .acceptLicense()
+            .withPassword(MSSQL_PASSWORD)
             .withStartupTimeout(Duration.ofMinutes(2));
 
     @BeforeAll
@@ -67,7 +65,7 @@ public class MSSQLReactiveTest {
 
     @Test
     public void testReactiveMSSQLConnection() {
-        IGuiceContext.registerModule("com.guicedee.guicedpersistence.test");
+        IGuiceContext.registerModule("guiced.persistence.test");
         IGuiceContext.getContext().inject();
 
         try {
@@ -86,39 +84,26 @@ public class MSSQLReactiveTest {
             log.info("✅ Successfully got SessionFactory from Guice");
 
             // Test opening a session and executing a native query on the Vert.x context
-            VertXPreStartup.getVertx().runOnContext(handle -> {
-                log.info("Testing session open...");
-                sessionFactory.openSession()
-                        .onItemOrFailure().invoke((session, error) -> {
-                            if (error != null) {
-                                fail("Error occurred while opening a session", error);
-                            } else {
-                                log.info("✅ Session opened successfully");
-                            }
-                            session.close();
-                        })
-                        .onFailure().invoke(error -> fail("Error occurred while opening a session", error))
-                        .await().atMost(Duration.of(30, ChronoUnit.SECONDS));
+            ReactiveDatabaseTestSupport.assertQuery(sessionFactory, "SELECT 1");
 
-                log.info("Testing withSession + native query...");
-                sessionFactory.withSession(session -> {
-                            log.info("Inside withSession");
-                            return session.createNativeQuery("SELECT 1")
-                                    .getResultList()
-                                    .onItem().invoke(result -> {
-                                        assertNotNull(result, "Query result should not be null");
-                                        assertFalse(result.isEmpty(), "Query result should not be empty");
-                                        log.info("✅ Native query result: {}", result);
-                                    });
-                        }).onFailure().invoke(error -> fail("Error occurred while executing query", error))
-                        .await().atMost(Duration.of(30, ChronoUnit.SECONDS));
-
-                log.info("✅ All MSSQL reactive tests passed");
-            });
+            var connectionInfo = com.guicedee.persistence.implementations.VertxPersistenceModule
+                    .getConnectionModules().keySet().stream()
+                    .filter(info -> "testMSSQLReactive".equals(info.getPersistenceUnitName()))
+                    .findFirst().orElseThrow();
+            var client = connectionInfo.toPooledDatasource();
+            assertNotNull(client, "The native Vert.x MSSQL pool must be created");
+            try {
+                var rows = client.query("SELECT 1 AS result").execute().toCompletionStage()
+                        .toCompletableFuture().get(30, java.util.concurrent.TimeUnit.SECONDS);
+                assertEquals(1, rows.iterator().next().getInteger("result"));
+            } finally {
+                client.close().toCompletionStage().toCompletableFuture()
+                        .get(30, java.util.concurrent.TimeUnit.SECONDS);
+            }
 
         } catch (Exception e) {
             log.error("Test failed", e);
-            fail("Test failed: " + e.getMessage());
+            fail("Test failed: " + e.getMessage(), e);
         }
     }
 }

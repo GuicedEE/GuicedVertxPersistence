@@ -66,7 +66,7 @@ public class OracleReactiveTest {
 
     @Test
     public void testReactiveOracleConnection() {
-        IGuiceContext.registerModule("com.guicedee.guicedpersistence.test");
+        IGuiceContext.registerModule("guiced.persistence.test");
         IGuiceContext.getContext().inject();
 
         try {
@@ -85,39 +85,11 @@ public class OracleReactiveTest {
             log.info("✅ Successfully got SessionFactory from Guice");
 
             // Test opening a session and executing a native query on the Vert.x context
-            VertXPreStartup.getVertx().runOnContext(handle -> {
-                log.info("Testing session open...");
-                sessionFactory.openSession()
-                        .onItemOrFailure().invoke((session, error) -> {
-                            if (error != null) {
-                                fail("Error occurred while opening a session", error);
-                            } else {
-                                log.info("✅ Session opened successfully");
-                            }
-                            session.close();
-                        })
-                        .onFailure().invoke(error -> fail("Error occurred while opening a session", error))
-                        .await().atMost(Duration.of(30, ChronoUnit.SECONDS));
-
-                log.info("Testing withSession + native query...");
-                sessionFactory.withSession(session -> {
-                            log.info("Inside withSession");
-                            return session.createNativeQuery("SELECT 1 FROM DUAL")
-                                    .getResultList()
-                                    .onItem().invoke(result -> {
-                                        assertNotNull(result, "Query result should not be null");
-                                        assertFalse(result.isEmpty(), "Query result should not be empty");
-                                        log.info("✅ Native query result: {}", result);
-                                    });
-                        }).onFailure().invoke(error -> fail("Error occurred while executing query", error))
-                        .await().atMost(Duration.of(30, ChronoUnit.SECONDS));
-
-                log.info("✅ All Oracle reactive tests passed");
-            });
+            ReactiveDatabaseTestSupport.assertQuery(sessionFactory, "SELECT 1 FROM DUAL");
 
         } catch (Exception e) {
             log.error("Test failed", e);
-            fail("Test failed: " + e.getMessage());
+            fail("Test failed: " + e.getMessage(), e);
         }
     }
 }

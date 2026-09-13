@@ -14,6 +14,11 @@ import java.util.Properties;
 public class TestModuleMSSQLReactive extends DatabaseModule<TestModuleMSSQLReactive> {
 
     @Override
+    public boolean enabled() {
+        return System.getProperty("mssql.host") != null;
+    }
+
+    @Override
     protected String getPersistenceUnitName() {
         return "testMSSQLReactive";
     }

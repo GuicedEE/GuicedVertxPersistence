@@ -4,12 +4,12 @@
     <parent>
         <groupId>com.guicedee</groupId>
         <artifactId>parent</artifactId>
-        <version>2.2.2</version>
+        <version>2.2.3</version>
     </parent>
     <groupId>com.guicedee</groupId>
     <artifactId>persistence</artifactId>
     <packaging>jar</packaging>
-    <version>2.2.2</version>
+    <version>2.2.3</version>
     <name>Guiced Vert.x Persistence</name>
     <description>Integrates Vert.x Persistence</description>
     <url>https://guicedee.com</url>
@@ -40,6 +40,11 @@
     </properties>
     <dependencies>
         <dependency>
+            <groupId>com.guicedee.modules.services</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>com.ongres.scram</groupId>
             <artifactId>scram-client</artifactId>
         </dependency>
@@ -67,6 +72,11 @@
             <artifactId>vertx-mongo-client</artifactId>
             <optional>true</optional>
             <version>${vertx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.guicedee.modules.services</groupId>
+            <artifactId>mongodb-driver-reactivestreams</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
@@ -191,7 +201,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <testFailureIgnore>true</testFailureIgnore>
+                    <testFailureIgnore>false</testFailureIgnore>
+                    <!-- Database integration classes bootstrap independent static contexts. -->
+                    <reuseForks>false</reuseForks>
                     <argLine>
                         --add-reads org.jboss.logging=org.hibernate.reactive
                         --add-reads org.hibernate.orm.core=guiced.persistence.test

@@ -14,6 +14,11 @@ import java.util.Properties;
 public class TestModuleOracleReactive extends DatabaseModule<TestModuleOracleReactive> {
 
     @Override
+    public boolean enabled() {
+        return System.getProperty("oracle.host") != null;
+    }
+
+    @Override
     protected String getPersistenceUnitName() {
         return "testOracleReactive";
     }
