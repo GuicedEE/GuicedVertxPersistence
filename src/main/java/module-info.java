@@ -12,6 +12,8 @@ import com.guicedee.persistence.implementations.systemproperties.SystemEnvironme
 import org.hibernate.service.spi.ServiceContributor;
 
 module com.guicedee.persistence {
+    provides com.guicedee.client.services.lifecycle.IGuicePreStartup with com.guicedee.persistence.PersistenceShutdown;
+    provides com.guicedee.client.services.lifecycle.IGuicePreDestroy with com.guicedee.persistence.PersistenceShutdown;
 
     exports com.guicedee.persistence;
     exports com.guicedee.persistence.annotations;
