@@ -98,6 +98,8 @@ public final class JtaPersistModule extends PersistModule
     protected void configurePersistence()
     {
         JtaPersistService ps = new JtaPersistService(jpaUnit, properties);
+        com.guicedee.persistence.PersistenceShutdown.registerOwnedPool(properties);
+        com.guicedee.persistence.PersistenceShutdown.register(ps);
         // Create a direct provider for Mutiny.SessionFactory
         // Bind with both keys (named and annotation)
         for (Key<Map> key : getKeys(Map.class))

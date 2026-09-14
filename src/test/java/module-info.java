@@ -36,6 +36,7 @@ open module guiced.persistence.test {
     requires jakarta.persistence;
 
     requires org.junit.jupiter.api;
+    requires org.mockito;
     requires org.slf4j;
 
     requires junit;

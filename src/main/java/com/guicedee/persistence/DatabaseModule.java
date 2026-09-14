@@ -103,15 +103,16 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
     @Override
     public void onDestroy() {
         try {
-            IGuiceContext.get(Key.get(PersistService.class, Names.named(getPersistenceUnitName()))).stop();
-        } catch (Throwable t) {
-            log.debug("⚠️ PersistService stop failed: {}", t.getMessage());
+            new PersistenceShutdown().onDestroy();
+        } finally {
+            resetDescriptors();
+            JtaPersistModule.reset();
+            VertxPersistenceModule.reset();
         }
-        log.info("🛑 PersistService stopped");
-        resetDescriptors();
-        JtaPersistModule.reset();
-        VertxPersistenceModule.reset();
     }
+
+    @Override
+    public Integer shutdownSortOrder() { return Integer.MAX_VALUE - 1000; }
 
     /**
      * Configures module bindings for the persistence unit.
@@ -141,6 +142,7 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
         }
         try {
             ConnectionBaseInfo connectionBaseInfo = getConnectionBaseInfo(pu, jdbcProperties);
+            PersistenceShutdown.registerOwnedPool(jdbcProperties);
             connectionBaseInfo.populateFromProperties(pu, jdbcProperties);
             String jdbcUrl = connectionBaseInfo.getJdbcUrl();
             // Hibernate Reactive's Oracle parser expects @host:port/service, while

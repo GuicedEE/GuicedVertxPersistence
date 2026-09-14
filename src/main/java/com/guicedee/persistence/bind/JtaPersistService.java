@@ -58,51 +58,67 @@ public class JtaPersistService implements PersistService {
     @Getter
     private final Provider<Mutiny.SessionFactory> sessionFactoryProvider;
 
-    /**
-     * Creates the EntityManagerFactory if it has not already been initialized.
-     */
-    @Override
-    public synchronized Uni<Void> start() {
-        log.trace("🚀 Starting JtaPersistService for persistence unit: '{}'", persistenceUnitName);
-        if (null != emFactory) {
-            log.debug("📋 EntityManagerFactory already exists for persistence unit: '{}', skipping initialization", persistenceUnitName);
-            return Uni.createFrom().voidItem();
-        }
+    private java.util.concurrent.CompletableFuture<Void> starting;
+    private java.util.concurrent.CompletableFuture<Void> stopping;
+    private boolean stopRequested;
 
-        if (null != persistenceProperties) {
-            return Uni.createFrom().item(() -> {
-                log.debug("📋 Creating EntityManagerFactory for persistence unit: '{}'", persistenceUnitName);
-                long startTime = System.currentTimeMillis();
-                this.emFactory =
-                        Persistence.createEntityManagerFactory(persistenceUnitName, persistenceProperties);
-                this.sessionFactory = this.emFactory.unwrap(Mutiny.SessionFactory.class);
-                log.info("✅ Successfully created EntityManagerFactory for persistence unit: '{}' in {}ms", persistenceUnitName, System.currentTimeMillis() - startTime);
-                return null;
-            });
-        } else {
-            log.fatal("⚠️ No persistence properties provided for persistence unit: '{}'", persistenceUnitName);
-            return Uni.createFrom().failure(new RuntimeException("No persistence properties provided for persistence unit: " + persistenceUnitName));
-        }
+    /** One subscribed factory creation, with stop/start races resolved before readiness. */
+    @Override public Uni<Void> start() {
+        return Uni.createFrom().completionStage(this::startOnce);
     }
-
-    /**
-     * Closes the EntityManagerFactory if it is open.
-     */
-    @Override
-    public  synchronized Uni<Void> stop() {
-        log.info("🛑 Stopping JtaPersistService for persistence unit: '{}'", persistenceUnitName);
-        if (null != emFactory && emFactory.isOpen()) {
-            return Uni.createFrom().item(() -> {
-                log.trace("📋 Closing EntityManagerFactory for persistence unit: '{}'", persistenceUnitName);
-                sessionFactory.close();
-                emFactory.close();
-                log.info("✅ Successfully closed EntityManagerFactory for persistence unit: '{}'", persistenceUnitName);
-                return null;
-            });
-        } else {
-            log.warn("📋 No open EntityManagerFactory to close for persistence unit: '{}'", persistenceUnitName);
-            return Uni.createFrom().voidItem();
-        }
+    private synchronized java.util.concurrent.CompletableFuture<Void> startOnce() {
+        if (stopRequested) return java.util.concurrent.CompletableFuture.failedFuture(new IllegalStateException("Persistence is stopped"));
+        if (starting != null) return starting;
+        starting = new java.util.concurrent.CompletableFuture<>();
+        Runnable initialize = () -> {
+            try {
+                EntityManagerFactory created = createFactory();
+                synchronized (this) { emFactory = created; }
+                Mutiny.SessionFactory reactive = created.unwrap(Mutiny.SessionFactory.class);
+                synchronized (this) {
+                    sessionFactory = reactive;
+                    if (stopRequested) starting.completeExceptionally(new IllegalStateException("Persistence stopped during startup"));
+                    else starting.complete(null);
+                }
+            } catch (Throwable failed) {
+                try { closeFactory(); } catch (Throwable cleanup) { failed.addSuppressed(cleanup); }
+                starting.completeExceptionally(failed);
+            }
+        };
+        var context = io.vertx.core.Vertx.currentContext();
+        if (context != null) {
+            try {
+                context.executeBlocking(() -> { initialize.run();return null; }, false)
+                        .onFailure(starting::completeExceptionally);
+            } catch (Throwable failed) { starting.completeExceptionally(failed); }
+        } else Thread.ofVirtual().name("guicedee-persistence-start").start(initialize);
+        return starting;
+    }
+    /** Isolated override point for lifecycle verification; normal startup uses the JPA provider. */
+    protected EntityManagerFactory createFactory() {
+        if (persistenceProperties == null) throw new IllegalStateException("Persistence properties are required");
+        return Persistence.createEntityManagerFactory(persistenceUnitName, persistenceProperties);
+    }
+    /** Terminal, idempotent stop. Subscription waits for in-flight creation and closes the factory once. */
+    @Override public synchronized Uni<Void> stop() {
+        stopRequested = true;
+        return Uni.createFrom().completionStage(this::stopOnce);
+    }
+    private synchronized java.util.concurrent.CompletableFuture<Void> stopOnce() {
+        if (stopping != null) return stopping;
+        stopping = new java.util.concurrent.CompletableFuture<>();
+        var startup = starting == null ? java.util.concurrent.CompletableFuture.<Void>completedFuture(null) : starting;
+        startup.whenComplete((ignored, failedStartup) -> Thread.ofVirtual().name("guicedee-persistence-stop").start(() -> {
+            try { closeFactory();stopping.complete(null); }
+            catch (Throwable failed) { stopping.completeExceptionally(failed); }
+        }));
+        return stopping;
+    }
+    private void closeFactory() {
+        EntityManagerFactory owned;
+        synchronized (this) { owned = emFactory;emFactory = null;sessionFactory = null; }
+        // The Mutiny wrapper and EMF refer to the same underlying factory. Close its owner once.
+        if (owned != null && owned.isOpen()) owned.close();
     }
 
     /**
