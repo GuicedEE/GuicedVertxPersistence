@@ -28,6 +28,7 @@ open module guiced.persistence.test {
     requires com.microsoft.sqlserver.jdbc;
     requires com.ongres.scram.client;
     requires com.guicedee.vertx;
+    requires io.vertx.mutiny;
     requires io.vertx.mongo.client;
     requires io.vertx.cassandra.client;
     //requires org.postgresql.jdbc;
@@ -42,5 +43,4 @@ open module guiced.persistence.test {
     requires junit;
     requires static lombok;
     requires com.datastax.oss.driver.core;
-    //requires io.smallrye.mutiny.vertx.core;
 }

@@ -97,7 +97,16 @@ public class JtaPersistService implements PersistService {
     /** Isolated override point for lifecycle verification; normal startup uses the JPA provider. */
     protected EntityManagerFactory createFactory() {
         if (persistenceProperties == null) throw new IllegalStateException("Persistence properties are required");
-        return Persistence.createEntityManagerFactory(persistenceUnitName, persistenceProperties);
+        var properties = new java.util.HashMap<Object,Object>(persistenceProperties);
+        if (properties.containsKey("hibernate.vertx.pool")) {
+            if (!(properties.get("hibernate.vertx.pool") instanceof io.vertx.sqlclient.Pool)
+                    || properties.containsKey("hibernate.vertx.pool.class"))
+                throw new IllegalArgumentException("Invalid or conflicting shared Vertx SQL pool configuration");
+            // Hibernate accepts a ReactiveConnectionPool through pool.class, not a raw Vertx pool.
+            properties.put("hibernate.vertx.pool.class",
+                    com.guicedee.persistence.implementations.SharedReactiveConnectionPool.class);
+        }
+        return Persistence.createEntityManagerFactory(persistenceUnitName, properties);
     }
     /** Terminal, idempotent stop. Subscription waits for in-flight creation and closes the factory once. */
     @Override public synchronized Uni<Void> stop() {
