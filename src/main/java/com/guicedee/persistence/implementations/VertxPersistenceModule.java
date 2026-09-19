@@ -448,14 +448,23 @@ public class VertxPersistenceModule extends AbstractModule implements IGuiceModu
      * @param entityManagerName The name of the entity manager to look up (value from the @EntityManager annotation)
      * @return The SqlClient for the specified entity manager, or null if not found
      */
-    public static SqlClient getSqlClientByEntityManager(String entityManagerName)
+    public static synchronized SqlClient getSqlClientByEntityManager(String entityManagerName)
     {
         if (entityManagerName == null)
         {
             entityManagerName = DEFAULT_PACKAGE;
         }
 
-        return sqlClientMap.get(entityManagerName);
+        SqlClient existing = sqlClientMap.get(entityManagerName);
+        if (existing != null) return existing;
+        // DatabaseModule registers its configured ConnectionBaseInfo directly. It does
+        // not necessarily pass through the package-annotation discovery path that
+        // populates this map. Borrow that same configured datasource, once per unit.
+        ConnectionBaseInfo connection = getConnectionInfoByEntityManager(entityManagerName);
+        if (connection == null) return null;
+        SqlClient client = connection.toPooledDatasource();
+        if (client != null) sqlClientMap.put(entityManagerName, client);
+        return client;
     }
 
     /**
