@@ -123,10 +123,7 @@
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-core</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>com.guicedee.modules.services</groupId>
             <artifactId>hibernate-reactive</artifactId>
