@@ -42,5 +42,5 @@ open module guiced.persistence.test {
 
     requires junit;
     requires static lombok;
-    requires com.datastax.oss.driver.core;
+    requires java.driver.core;
 }
