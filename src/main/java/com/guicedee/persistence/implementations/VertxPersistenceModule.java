@@ -121,7 +121,7 @@ public class VertxPersistenceModule extends AbstractModule implements IGuiceModu
         log.debug("📋 Processing package-level EntityManager annotations");
         for (PackageInfo packageInfo : scanResult.getPackageInfo())
         {
-            AnnotationInfo annotationInfo = packageInfo.getAnnotationInfo(EntityManager.class.getName());
+            AnnotationInfo annotationInfo = packageInfo.getDirectAnnotationInfo(EntityManager.class.getName());
             if (annotationInfo != null)
             {
                 String emName = getAnnotationValue(annotationInfo);
