@@ -1,5 +1,7 @@
 # GuicedEE Persistence
 
+Persistence supports explicit model discovery without ClassGraph through `IGuiceDiscovery`. See [SPI registration, XML mappings and persistence-unit boundaries](SPI_DISCOVERY.md).
+
 [![Build](https://github.com/GuicedEE/GuicedVertxPersistence/actions/workflows/build.yml/badge.svg)](https://github.com/GuicedEE/GuicedVertxPersistence/actions/workflows/build.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/com.guicedee/persistence)](https://central.sonatype.com/artifact/com.guicedee/persistence)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue)](https://www.apache.org/licenses/LICENSE-2.0)

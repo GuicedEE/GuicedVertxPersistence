@@ -12,6 +12,7 @@ import com.guicedee.persistence.implementations.systemproperties.SystemEnvironme
 import org.hibernate.service.spi.ServiceContributor;
 
 module com.guicedee.persistence {
+    requires com.guicedee.jsonrepresentation;
     provides com.guicedee.client.services.lifecycle.IGuicePreStartup with com.guicedee.persistence.PersistenceShutdown;
     provides com.guicedee.client.services.lifecycle.IGuicePreDestroy with com.guicedee.persistence.PersistenceShutdown;
 

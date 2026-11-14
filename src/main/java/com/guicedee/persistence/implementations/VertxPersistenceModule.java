@@ -10,7 +10,7 @@ import com.guicedee.persistence.annotations.EntityManager;
 import com.guicedee.persistence.bind.JtaPersistModule;
 import io.github.classgraph.AnnotationInfo;
 import io.github.classgraph.PackageInfo;
-import io.github.classgraph.ScanResult;
+import com.guicedee.client.utils.Discovery;
 import io.vertx.sqlclient.SqlClient;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
@@ -65,8 +65,6 @@ public class VertxPersistenceModule extends AbstractModule implements IGuiceModu
     @Override
     protected void configure()
     {
-        ScanResult scanResult = IGuiceContext.instance().getScanResult();
-
         // Find all concrete classes that extend DatabaseModule and package-level EntityManager annotations
         Set<String> processedEntityManagers = new HashSet<>();
         Map<String, ConnectionBaseInfo> localConnectionInfoMap = new HashMap<>();
@@ -119,54 +117,20 @@ public class VertxPersistenceModule extends AbstractModule implements IGuiceModu
 
         // Process package-level annotations for EntityManager
         log.debug("📋 Processing package-level EntityManager annotations");
-        for (PackageInfo packageInfo : scanResult.getPackageInfo())
+        for (var entry : discoverPackageEntityManagers().entrySet())
         {
-            AnnotationInfo annotationInfo = packageInfo.getDirectAnnotationInfo(EntityManager.class.getName());
-            if (annotationInfo != null)
+            EntityManager emAnno = entry.getValue();
+            String emName = emAnno.value();
+            log.info("🔍 Found package-level EntityManager annotation: {} with value: {}", entry.getKey(), emName);
+
+            // Check if this entity manager name is already in use
+            if (!entityManagerAnnotations.containsKey(emName))
             {
-                String emName = getAnnotationValue(annotationInfo);
-                boolean isDefault = getAnnotationDefaultEm(annotationInfo);
-                log.info("🔍 Found package-level EntityManager annotation: {} with value: {}", packageInfo.getName(), emName);
-
-                // Check if this entity manager name is already in use
-                if (!entityManagerAnnotations.containsKey(emName))
-                {
-                    throw new IllegalStateException("No Database Module EntityManager annotation value '" + emName +
-                            "' found in package info'" + packageInfo.getName() + "'. Please define a database module with the EntityManager annotation.");
-                }
-
-                // Store the EntityManager annotation and package name
-                EntityManager emAnno = new EntityManager()
-                {
-                    @Override
-                    public Class<? extends Annotation> annotationType()
-                    {
-                        return EntityManager.class;
-                    }
-
-                    @Override
-                    public String value()
-                    {
-                        return emName;
-                    }
-
-                    @Override
-                    public boolean allClasses()
-                    {
-                        Object allClasses = annotationInfo.getParameterValues().getValue("allClasses");
-                        return allClasses != null ? Boolean.parseBoolean(allClasses.toString()) : true;
-                    }
-
-                    @Override
-                    public boolean defaultEm()
-                    {
-                        return isDefault;
-                    }
-                };
-
-                entityManagerAnnotations.put(emName, emAnno);
-                packageNamesByEntityManager.put(emName, packageInfo.getName());
+                throw new IllegalStateException("No Database Module EntityManager annotation value '" + emName +
+                        "' found in package info'" + entry.getKey() + "'. Please define a database module with the EntityManager annotation.");
             }
+            entityManagerAnnotations.put(emName, emAnno);
+            packageNamesByEntityManager.put(emName, entry.getKey());
         }
 
         // If no EntityManager annotations or DatabaseModules were found, use the default package
@@ -256,7 +220,34 @@ public class VertxPersistenceModule extends AbstractModule implements IGuiceModu
                 .to(Key.get(UnitOfWork.class, Names.named(defaultConnectionInfo.getPersistenceUnitName())));*/
     }
 
-    private String getAnnotationValue(AnnotationInfo annotationInfo)
+    /** Registered package metadata takes precedence over the convenience scan. */
+    protected static Map<String, EntityManager> discoverPackageEntityManagers()
+    {
+        Map<String, EntityManager> result = new java.util.LinkedHashMap<>();
+        for (Package pkg : Discovery.registeredPackages()) {
+            EntityManager annotation = pkg.getDeclaredAnnotation(EntityManager.class);
+            if (annotation != null) result.put(pkg.getName(), annotation);
+        }
+        if (!Discovery.isSpiOnly()) {
+            for (PackageInfo pkg : IGuiceContext.instance().getScanResult().getPackageInfo()) {
+                AnnotationInfo info = pkg.getDirectAnnotationInfo(EntityManager.class.getName());
+                if (info != null && !result.containsKey(pkg.getName())) {
+                    result.put(pkg.getName(), new EntityManager() {
+                        public Class<? extends Annotation> annotationType() { return EntityManager.class; }
+                        public String value() { return getAnnotationValue(info); }
+                        public boolean defaultEm() { return getAnnotationDefaultEm(info); }
+                        public boolean allClasses() {
+                            Object value = info.getParameterValues().getValue("allClasses");
+                            return value == null || Boolean.parseBoolean(value.toString());
+                        }
+                    });
+                }
+            }
+        }
+        return java.util.Collections.unmodifiableMap(result);
+    }
+
+    private static String getAnnotationValue(AnnotationInfo annotationInfo)
     {
         Object value = annotationInfo.getParameterValues().getValue("value");
         return value != null ? value.toString() : DEFAULT_PACKAGE;
@@ -268,7 +259,7 @@ public class VertxPersistenceModule extends AbstractModule implements IGuiceModu
      * @param annotationInfo the package annotation info
      * @return true when defaultEm is set or missing, false otherwise
      */
-    private boolean getAnnotationDefaultEm(AnnotationInfo annotationInfo)
+    private static boolean getAnnotationDefaultEm(AnnotationInfo annotationInfo)
     {
         Object defaultEm = annotationInfo.getParameterValues().getValue("defaultEm");
         return defaultEm != null ? Boolean.parseBoolean(defaultEm.toString()) : true;

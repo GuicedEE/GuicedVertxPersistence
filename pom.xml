@@ -64,10 +64,6 @@
             <artifactId>scram-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.guicedee.microprofile</groupId>
-            <artifactId>config</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-mssql-client</artifactId>
             <optional>true</optional>
@@ -169,6 +165,7 @@
         <dependency>
             <groupId>com.guicedee.modules.services</groupId>
             <artifactId>vertx-mutiny</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.smallrye.reactive</groupId>
