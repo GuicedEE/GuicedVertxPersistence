@@ -120,7 +120,7 @@ public class VertxPersistenceModule extends AbstractModule implements IGuiceModu
         for (var entry : discoverPackageEntityManagers().entrySet())
         {
             EntityManager emAnno = entry.getValue();
-            String emName = emAnno.value();
+            String emName = com.guicedee.client.Environment.resolveAnnotationValue(emAnno.value());
             log.info("🔍 Found package-level EntityManager annotation: {} with value: {}", entry.getKey(), emName);
 
             // Check if this entity manager name is already in use

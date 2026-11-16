@@ -56,7 +56,7 @@ public class MongoDBTest {
     @Test
     public void testMongoClientBinding() throws Exception {
         // Register our test module
-        IGuiceContext.registerModule("com.guicedee.guicedpersistence.test");
+        IGuiceContext.registerModule(MongoDBTest.class);
         IGuiceContext.getContext().inject();
 
         // Verify the MongoClient is bound with @Named
@@ -72,7 +72,7 @@ public class MongoDBTest {
 
     @Test
     public void testSaveAndFind() throws Exception {
-        IGuiceContext.registerModule("com.guicedee.guicedpersistence.test");
+        IGuiceContext.registerModule(MongoDBTest.class);
         IGuiceContext.getContext().inject();
 
         MongoClient client = IGuiceContext.get(MongoClient.class);
@@ -115,7 +115,7 @@ public class MongoDBTest {
 
     @Test
     public void testListCollections() throws Exception {
-        IGuiceContext.registerModule("com.guicedee.guicedpersistence.test");
+        IGuiceContext.registerModule(MongoDBTest.class);
         IGuiceContext.getContext().inject();
 
         MongoClient client = IGuiceContext.get(MongoClient.class);

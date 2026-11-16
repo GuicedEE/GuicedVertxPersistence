@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.guicedee.persistence.bind;
 
 import com.google.inject.AbstractModule;
@@ -38,23 +37,7 @@ public abstract class PersistModule extends AbstractModule
     {
         super.configure();
         configurePersistence();
-
        requireBinding(PersistService.class);
-      /*  MethodInterceptor transactionInterceptor = getTransactionInterceptor();
-
-        if (InternalFlags.isBytecodeGenEnabled())
-        {
-            // class-level @Transacational
-            bindInterceptor(
-                    annotatedWith(Transactional.class), NOT_OBJECT_METHOD, transactionInterceptor);
-            // method-level @Transacational
-            bindInterceptor(any(), annotatedWith(Transactional.class), transactionInterceptor);
-
-            bindInterceptor(
-                    annotatedWith(jakarta.transaction.Transactional.class), NOT_OBJECT_METHOD, transactionInterceptor);
-            // method-level @Transacational
-            bindInterceptor(any(), annotatedWith(jakarta.transaction.Transactional.class), transactionInterceptor);
-        }*/
     }
 
     /**

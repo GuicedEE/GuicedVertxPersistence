@@ -17,6 +17,20 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class PersistenceLifecycleTest {
+    @Test void libraryStartupOwnsGuiceRegisteredServicesWithoutApplicationHooks() throws Exception {
+        new PersistenceShutdown().onStartup();
+        var factory = factory();var service = new Service(factory, false);
+        PersistenceShutdown.register(service);
+        try {
+            var startup = new com.guicedee.persistence.PersistenceStartup();
+            for (var operation : startup.postLoad())
+                operation.subscribeAsCompletionStage().toCompletableFuture().get(5, TimeUnit.SECONDS);
+            await(service.start()); // A legacy DatabaseModule hook may still call start too.
+            assertEquals(1, service.creates.get());
+            PersistenceShutdown.close().get(5, TimeUnit.SECONDS);
+            verify(factory, times(1)).close();
+        } finally { new PersistenceShutdown().onStartup(); }
+    }
     static final class Service extends JtaPersistService {
         final EntityManagerFactory factory;
         final AtomicInteger creates=new AtomicInteger();

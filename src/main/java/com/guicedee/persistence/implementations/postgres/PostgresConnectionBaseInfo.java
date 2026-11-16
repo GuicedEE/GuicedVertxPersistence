@@ -7,7 +7,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgConnection;
-import io.vertx.pgclient.SslMode;
 import io.vertx.sqlclient.PoolOptions;
 import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlClient;
@@ -45,10 +44,16 @@ public class PostgresConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
     }
 
     /**
-     * Returns a Vertx SqlClient configured for PostgreSQL.
+     * Reads the configured JDBC URL using the PostgreSQL driver's URI parser.
      *
-     * @return A SqlClient instance
+     * @return connection options, including URL-specified port, database and SSL mode
      */
+    protected PgConnectOptions createConnectOptions() {
+        String url = getUrl();
+        return url == null || url.isEmpty() ? new PgConnectOptions()
+                : PgConnectOptions.fromUri(url.startsWith("jdbc:") ? url.substring(5) : url);
+    }
+
     @Override
     public SqlClient toPooledDatasource() {
         try {
@@ -66,7 +71,7 @@ public class PostgresConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
             // Use reflection to create PgConnectOptions and PoolOptions
             PgConnectOptions connectOptions;
             try {
-                connectOptions = new PgConnectOptions();
+                connectOptions = createConnectOptions();
             } catch (Exception e) {
                 log.error("Error creating PgConnectOptions", e);
                 return null;
@@ -75,7 +80,6 @@ public class PostgresConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
             connectOptions.setReconnectAttempts(30);
             connectOptions.setReconnectInterval(1500);
             connectOptions.setCachePreparedStatements(true);
-            connectOptions.setSslMode(SslMode.DISABLE);
 
             // Set basic connection properties
             try
@@ -100,13 +104,6 @@ public class PostgresConnectionBaseInfo extends CleanVertxConnectionBaseInfo {
                         connectOptions.setPort(Integer.parseInt(getPort()));
                     } catch (Exception e) {
                         log.error("Error setting port for PostgreSQL connection", e);
-                    }
-                } else {
-                    // Default PostgreSQL port
-                    try {
-                        connectOptions.setPort(5432);
-                    } catch (Exception e) {
-                        log.error("Error setting default port for PostgreSQL connection", e);
                     }
                 }
             }

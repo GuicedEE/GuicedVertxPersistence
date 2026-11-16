@@ -54,7 +54,7 @@ public class CassandraTest {
 
     @Test
     public void testCassandraClientBinding() {
-        IGuiceContext.registerModule("com.guicedee.guicedpersistence.test");
+        IGuiceContext.registerModule(CassandraTest.class);
         IGuiceContext.getContext().inject();
 
         CassandraClient namedClient = IGuiceContext.get(Key.get(CassandraClient.class, Names.named("testCassandra")));
@@ -68,7 +68,7 @@ public class CassandraTest {
 
     @Test
     public void testExecuteQuery() throws Exception {
-        IGuiceContext.registerModule("com.guicedee.guicedpersistence.test");
+        IGuiceContext.registerModule(CassandraTest.class);
         IGuiceContext.getContext().inject();
 
         CassandraClient client = IGuiceContext.get(CassandraClient.class);

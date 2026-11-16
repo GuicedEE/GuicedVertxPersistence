@@ -12,7 +12,6 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.guicedee.client.Environment.getProperty;
 import static com.guicedee.client.Environment.getSystemPropertyOrEnvironment;
 
 /**
@@ -26,10 +25,6 @@ import static com.guicedee.client.Environment.getSystemPropertyOrEnvironment;
 public class SystemEnvironmentVariablesPropertiesReader
         implements IPropertiesEntityManagerReader<SystemEnvironmentVariablesPropertiesReader>
 {
-    // Pattern for ${property:defaultValue} format
-    private static final String TRADITIONAL_PATTERN = "\\$\\{([a-zA-Z0-9_\\-\\.]*)\\:?(.*)?\\}";
-    private static final Pattern traditionalPattern = Pattern.compile(TRADITIONAL_PATTERN);
-
     // Pattern for property:defaultValue format
     private static final String DIRECT_PATTERN = "([a-zA-Z0-9_\\-\\.]+)\\:(.+)";
     private static final Pattern directPattern = Pattern.compile(DIRECT_PATTERN);
@@ -60,6 +55,11 @@ public class SystemEnvironmentVariablesPropertiesReader
                 if (!value.equals(processedValue)) {
                     incomingProperties.put(prop, processedValue);
                 }
+                continue;
+            }
+
+            // Literal URLs (including previously resolved JDBC URLs) are not key:default expressions.
+            if (value.startsWith("jdbc:") || value.matches("[a-zA-Z][a-zA-Z0-9+.-]*://.*")) {
                 continue;
             }
 

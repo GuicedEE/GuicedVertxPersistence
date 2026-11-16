@@ -43,17 +43,10 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
     }
 
     /**
-     * Parses persistence.xml resources and registers lifecycle hooks.
-     *
-     * <p><b>Note:</b> This constructor does <em>not</em> call
-     * {@code loadPostStartupServices().add(this)} or
-     * {@code loadPreDestroyServices().add(this)} because this class is
-     * already registered as a {@code provides IGuicePostStartup} /
-     * {@code IGuicePreDestroy} in the JPMS {@code module-info.java}.
-     * The {@link java.util.ServiceLoader} handles discovery automatically.
-     * Calling those methods from the constructor caused infinite recursion
-     * (StackOverflowError) because the service loader re-instantiates the
-     * same provider while it is still being constructed.</p>
+     * Parses persistence.xml resources. The persistence library owns startup and
+     * shutdown of services installed by this module; applications only register
+     * the IGuiceModule provider. Legacy explicit lifecycle registrations remain
+     * compatible because persistence start and stop are idempotent.
      */
     public DatabaseModule() {
         if (PersistenceUnitDescriptors.isEmpty()) {
@@ -62,7 +55,9 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
             if (urls.isEmpty()) {
                 return;
             }
-            PersistenceUnitDescriptors.addAll(parser.parse(urls).values());
+            PersistenceUnitDescriptors.addAll(com.guicedee.persistence.implementations.PersistenceDiagnostics.measure(
+                    "persistence-xml", "all", () -> com.guicedee.persistence.implementations.PersistenceDescriptorParser
+                            .parse(urls, parser::parse)).values());
             for (var desc : PersistenceUnitDescriptors) {
                 log.debug("📋 PU Found: {}", desc.getName());
             }
@@ -158,69 +153,13 @@ public abstract class DatabaseModule<J extends DatabaseModule<J>>
             }
             log.info("💾 {} - Connection Base Info Final - {}", getPersistenceUnitName(), connectionBaseInfo);
             connectionBaseInfo.setPersistenceUnitName(getPersistenceUnitName());
-            // Pre-initialize a shared, named Vert.x SQL pool as early as possible so HR can reuse it
-            // We try hard to execute this on a Vert.x event-loop, but also provide safe fallbacks
-            try {
-                String puName = String.valueOf(connectionBaseInfo.getPersistenceUnitName());
-                var vertx = com.guicedee.vertx.spi.VertXPreStartup.getVertx();
-                if (vertx != null) {
-                    log.info("[DB-POOL-INIT] Scheduling pool init on Vert.x context for PU='{}'", puName);
-
-                    // Primary: schedule on event-loop via runOnContext
-                    vertx.runOnContext(v -> {
-                        try {
-                            log.info("[DB-POOL-INIT] runOnContext executing for PU='{}' on thread='{}'", puName, Thread.currentThread().getName());
-                            io.vertx.sqlclient.SqlClient client = connectionBaseInfo.toPooledDatasource();
-                            if (client != null) {
-                                log.info("[DB-POOL-INIT] runOnContext pool init complete for PU='{}'", puName);
-                            } else {
-                                log.warn("[DB-POOL-INIT] runOnContext pool init returned null for PU='{}'", puName);
-                            }
-                        } catch (Throwable t) {
-                            log.warn("[DB-POOL-INIT] runOnContext pool init failed for PU='{}': {}", puName, t.toString());
-                        }
-                    });
-
-                    // Secondary: a zero-delay timer as a backup in case runOnContext doesn't fire under debugger
-                    try {
-                        vertx.setTimer(0, id -> {
-                            try {
-                                log.info("[DB-POOL-INIT] setTimer(0) executing for PU='{}' on thread='{}'", puName, Thread.currentThread().getName());
-                                io.vertx.sqlclient.SqlClient client = connectionBaseInfo.toPooledDatasource();
-                                if (client != null) {
-                                    log.info("[DB-POOL-INIT] setTimer(0) pool init complete for PU='{}'", puName);
-                                } else {
-                                    log.warn("[DB-POOL-INIT] setTimer(0) pool init returned null for PU='{}'", puName);
-                                }
-                            } catch (Throwable t) {
-                                log.warn("[DB-POOL-INIT] setTimer(0) pool init failed for PU='{}': {}", puName, t.toString());
-                            }
-                        });
-                    } catch (Throwable tt) {
-                        log.debug("[DB-POOL-INIT] setTimer not available, skipping");
-                    }
-                } else {
-                    // Last resort: initialize immediately (off-context). Pool creation is safe off the event-loop,
-                    // and our implementation sets shared+name so HR can still reuse it.
-                    try {
-                        log.info("[DB-POOL-INIT] Vert.x not ready; performing immediate fallback pool init for PU='{}' on thread='{}'", puName, Thread.currentThread().getName());
-                        io.vertx.sqlclient.SqlClient client = connectionBaseInfo.toPooledDatasource();
-                        if (client != null) {
-                            log.info("[DB-POOL-INIT] Immediate fallback pool init complete for PU='{}'", puName);
-                        } else {
-                            log.warn("[DB-POOL-INIT] Immediate fallback pool init returned null for PU='{}'", puName);
-                        }
-                    } catch (Throwable t) {
-                        log.warn("[DB-POOL-INIT] Immediate fallback pool init failed for PU='{}': {}", puName, t.toString());
-                    }
-                }
-            } catch (Throwable t) {
-                log.debug("[DB-POOL-INIT] Skipping pre-initialization due to unexpected error: {}", t.toString());
-            }
+            // Hibernate owns its configured pool. A speculative pool created here is
+            // neither handed to Hibernate nor retained for shutdown. Named SQL clients
+            // are obtained lazily through VertxPersistenceModule when requested.
             var emAnnos = getClass().getAnnotationsByType(EntityManager.class);
             if (emAnnos.length > 0) {
                 JtaPersistModule jpaModule = new JtaPersistModule(getPersistenceUnitName(), connectionBaseInfo, emAnnos[0]);
-                jpaModule.properties(jdbcProperties);
+                jpaModule.properties(jdbcProperties).persistenceUnit(pu);
                 install(jpaModule);
                 VertxPersistenceModule.getConnectionModules().put(connectionBaseInfo, jpaModule);
             } else {

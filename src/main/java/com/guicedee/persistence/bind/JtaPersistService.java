@@ -24,6 +24,10 @@ import jakarta.persistence.Persistence;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.hibernate.reactive.mutiny.Mutiny;
+import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
+import org.hibernate.reactive.provider.ReactivePersistenceProvider;
+import org.hibernate.reactive.provider.impl.ReactiveEntityManagerFactoryBuilder;
+import com.guicedee.persistence.implementations.PersistenceDiagnostics;
 
 import java.time.Duration;
 import java.util.Map;
@@ -34,6 +38,7 @@ import java.util.Map;
 @Log4j2
 public class JtaPersistService implements PersistService {
     private final String persistenceUnitName;
+    private final PersistenceUnitDescriptor descriptor;
     @Getter
     private final Map<?, ?> persistenceProperties;
 
@@ -46,8 +51,14 @@ public class JtaPersistService implements PersistService {
     public JtaPersistService(
             String persistenceUnitName,
             Map<?, ?> persistenceProperties) {
+        this(persistenceUnitName, persistenceProperties, null);
+    }
+
+    public JtaPersistService(String persistenceUnitName, Map<?, ?> persistenceProperties,
+                             PersistenceUnitDescriptor descriptor) {
         log.debug("📋 Creating JtaPersistService for persistence unit: '{}'", persistenceUnitName);
         this.persistenceUnitName = persistenceUnitName;
+        this.descriptor = descriptor;
         this.persistenceProperties = persistenceProperties;
         sessionFactoryProvider = new SessionFactoryProvider(this);
     }
@@ -106,7 +117,25 @@ public class JtaPersistService implements PersistService {
             properties.put("hibernate.vertx.pool.class",
                     com.guicedee.persistence.implementations.SharedReactiveConnectionPool.class);
         }
-        return Persistence.createEntityManagerFactory(persistenceUnitName, properties);
+        // DatabaseModule has already located and parsed this unit. Passing the descriptor
+        // into the same Reactive builder avoids provider probing and a second XML parse.
+        // Preserve the JPA route for direct callers and explicitly selected custom providers.
+        Object provider = properties.getOrDefault("jakarta.persistence.provider",
+                properties.getOrDefault("javax.persistence.provider", descriptor == null ? "" : descriptor.getProviderClassName()));
+        if (descriptor != null && ReactivePersistenceProvider.class.getName().equals(provider)) {
+            // This descriptor came from DatabaseModule's default loader. Only this
+            // known loader arrangement permits lazy discovery without instantiating
+            // providers from an application's custom Hibernate classloader service.
+            properties.put("guicedee.persistence.standard_loader",
+                    descriptor.getClassLoader() == null && !properties.containsKey("hibernate.classLoaders")
+                            && Thread.currentThread().getContextClassLoader() == org.hibernate.bytecode.spi.BytecodeProvider.class.getClassLoader());
+            var builder = PersistenceDiagnostics.measure("metadata-bootstrap", persistenceUnitName,
+                    () -> new ReactiveEntityManagerFactoryBuilder(descriptor, properties));
+            PersistenceDiagnostics.measure("mapping-model", persistenceUnitName, builder::metadata);
+            return PersistenceDiagnostics.measure("session-factory", persistenceUnitName, builder::build);
+        }
+        return PersistenceDiagnostics.measure("jpa-bootstrap", persistenceUnitName,
+                () -> Persistence.createEntityManagerFactory(persistenceUnitName, properties));
     }
     /** Terminal, idempotent stop. Subscription waits for in-flight creation and closes the factory once. */
     @Override public synchronized Uni<Void> stop() {

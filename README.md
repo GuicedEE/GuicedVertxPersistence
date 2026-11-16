@@ -10,7 +10,7 @@ Persistence supports explicit model discovery without ClassGraph through `IGuice
 ![Guice 7](https://img.shields.io/badge/Guice-7%2B-green)
 ![Vert.X 5](https://img.shields.io/badge/Vert.x-5%2B-green)
 
-Reactive **JPA persistence** for [GuicedEE](https://github.com/GuicedEE) applications using **Hibernate Reactive 7** and **Vert.x 5**.
+Reactive **JPA persistence** for [GuicedEE](https://github.com/GuicedEE) applications using **Hibernate Reactive 4**, **Hibernate ORM 7** and **Vert.x 5**.
 Extend `DatabaseModule`, point it at a `persistence.xml` unit, and the module wires a `Mutiny.SessionFactory` into Guice — fully reactive, annotation-driven, with built-in support for PostgreSQL, MySQL, SQL Server, Oracle, and DB2.
 
 Built on [Hibernate Reactive](https://hibernate.org/reactive/) · [Vert.x SQL Client](https://vertx.io/docs/vertx-sql-client/java/) · [Google Guice](https://github.com/google/guice) · [Mutiny](https://smallrye.io/smallrye-mutiny/) · JPMS module `com.guicedee.persistence` · Java 25+
@@ -38,12 +38,56 @@ implementation("com.guicedee:persistence:2.4.1")
 - **Hibernate Reactive + Mutiny** — `Mutiny.SessionFactory` is bound in Guice with full reactive session/transaction support
 - **Multi-database support** — built-in `ConnectionBaseInfo` implementations for PostgreSQL, MySQL, SQL Server, Oracle, and DB2
 - **Environment variable resolution** — `${VAR_NAME}` placeholders in `persistence.xml` properties are resolved from system properties or environment variables
-- **Vert.x SQL Client pooling** — pre-initialized shared connection pools on the Vert.x event loop for optimal Hibernate Reactive integration
+- **Vert.x SQL Client pooling** — Hibernate owns its configured pool; explicitly supplied pools retain their configured ownership, and named SQL clients initialize when requested
 - **Multiple persistence units** — bind multiple `DatabaseModule` subclasses with distinct `@Named` qualifiers; one is marked as the default
 - **`@EntityManager` scoping** — annotate packages or classes to associate entities with specific persistence units
 - **SPI-driven property processing** — `IPropertiesEntityManagerReader` and `IPropertiesConnectionInfoReader` contribute database-specific Hibernate settings
 - **Vert.x context-aware startup** — `EntityManagerFactory` creation runs on a proper Vert.x context to satisfy Hibernate Reactive's internal requirements
 - **Lifecycle management** — `PersistService.start()` / `stop()` integrated with `IGuicePostStartup` / `IGuicePreDestroy`
+
+## Bootstrap and enhanced entities
+
+`DatabaseModule` passes its parsed persistence-unit descriptor directly to Hibernate
+Reactive. This avoids repeating provider discovery and XML parsing during factory
+creation. Explicit custom persistence providers keep the normal JPA bootstrap path.
+Schema validation and the factory startup completion barrier remain in place.
+
+Common Jakarta Persistence 3.0–3.2 descriptors use a streaming XML parser to avoid
+JAXB initialization during discovery. It preserves descriptor values and environment
+placeholders. Descriptors with mapping files, additional JARs, data sources, legacy
+namespaces or unsupported descriptor grammar delegate to Hibernate's original parser. Set
+`GUICEDEE_PERSISTENCE_XML_PARSER=hibernate` to use the original parser for every
+descriptor.
+
+Both paths first reject DTDs, external entities, malformed XML and excessive XML
+depth/attributes. External DTD access and XML catalogs are disabled locally on the
+JDK parser; application-wide JAXP settings are unchanged. Hibernate fallback reads
+the validated byte snapshot, preserving the original persistence-unit location
+without reopening a file that could have changed after validation. Schema hints
+and XInclude do not fetch external resources. These checks also apply when the
+Hibernate parser override is selected. Descriptors are limited to 8 MiB each;
+`GUICEDEE_PERSISTENCE_XML_MAX_BYTES` can raise the limit for larger applications.
+This boundary covers `persistence.xml`; Hibernate processes referenced mapping
+files separately.
+
+With the standard application classloader, entities enhanced at build time use
+Hibernate's standard property access instead of generating another reflection
+optimizer at startup. The default Byte Buddy provider is initialized only when required.
+Unenhanced entities, runtime enhancement, inheritance proxies and custom bytecode
+providers retain their provider behavior. Custom classloader arrangements use
+Hibernate's aggregate service discovery and retain the provider it returns unchanged.
+
+To restore Hibernate's original accessor generation for a persistence unit, set:
+
+```xml
+<property name="guicedee.persistence.optimize_enhanced_entities" value="false"/>
+```
+
+An explicitly supplied [`hibernate.enhancer.bytecodeprovider.instance`](https://docs.hibernate.org/orm/7.4/javadocs/org/hibernate/cfg/BytecodeSettings.html#BYTECODE_PROVIDER_INSTANCE) takes precedence.
+The accessor tradeoff should be measured for applications that hydrate large entity
+graphs. `GUICEDEE_DIAGNOSTICS_DIR` enables separate XML, metadata bootstrap, mapping
+model and session-factory phase timings in the application log; these instrumented runs are separate from
+performance measurements.
 
 ## 🚀 Quick Start
 
@@ -79,7 +123,10 @@ public class MyDatabaseModule extends DatabaseModule<MyDatabaseModule> {
     @Override
     protected ConnectionBaseInfo getConnectionBaseInfo(
             PersistenceUnitDescriptor unit, Properties properties) {
-        return ConnectionBaseInfoFactory.createConnectionBaseInfo("postgresql");
+        var connection = ConnectionBaseInfoFactory.createConnectionBaseInfo("postgresql");
+        connection.setReactive(true);
+        connection.setDefaultConnection(true);
+        return connection;
     }
 }
 ```
@@ -96,6 +143,11 @@ module my.app {
 ```
 
 **Step 4** — Use the reactive session factory:
+
+The persistence library starts and stops the services installed by the module.
+The application only registers `IGuiceModule`; additional application
+`IGuicePostStartup` and `IGuicePreDestroy` providers are unnecessary. Connection
+properties remain in `persistence.xml`, with explicit Java overrides supported.
 
 ```java
 public class UserService {
@@ -305,10 +357,18 @@ All `persistence.xml` property values support `${VAR_NAME}` and `${VAR_NAME:defa
           value="${DB_PASSWORD}"/>
 ```
 
-The `SystemEnvironmentVariablesPropertiesReader` resolves placeholders in this order:
+`SystemEnvironmentVariablesPropertiesReader` delegates placeholder expansion to
+the shared client `Environment` resolver, using this precedence:
+
 1. System property (`-DDB_URL=...`)
 2. Environment variable (`export DB_URL=...`)
-3. Default value (after the `:` separator)
+3. `.env.local`
+4. `.env`
+5. Default value (after `:` or `:-`)
+
+The connection reader then maps the resolved Jakarta JDBC properties (and legacy
+JPA/Hibernate aliases) into the connection settings. PostgreSQL reads its URL using
+the driver's URI parser, preserving the specified database, port and SSL options.
 
 Kubernetes-friendly: dot-notation properties (e.g., `db.url`) are also tried as uppercase underscored (`DB_URL`).
 

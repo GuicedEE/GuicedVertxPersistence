@@ -65,6 +65,13 @@ public final class JtaPersistModule extends PersistModule
     }
 
     private Map<?, ?> properties;
+    private org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor descriptor;
+
+    /** Reuses the unit already parsed by DatabaseModule without changing provider settings. */
+    public JtaPersistModule persistenceUnit(org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor descriptor) {
+        this.descriptor = descriptor;
+        return this;
+    }
 
     /**
      * Returns a Key for the given class with the jpaUnit as the named binding.
@@ -97,7 +104,7 @@ public final class JtaPersistModule extends PersistModule
     @Override
     protected void configurePersistence()
     {
-        JtaPersistService ps = new JtaPersistService(jpaUnit, properties);
+        JtaPersistService ps = new JtaPersistService(jpaUnit, properties, descriptor);
         com.guicedee.persistence.PersistenceShutdown.registerOwnedPool(properties);
         com.guicedee.persistence.PersistenceShutdown.register(ps);
         // Create a direct provider for Mutiny.SessionFactory

@@ -1,7 +1,6 @@
 package com.guicedee.persistence.implementations.hibernateproperties;
 
 
-import com.google.common.base.Strings;
 import com.guicedee.persistence.ConnectionBaseInfo;
 import com.guicedee.persistence.IPropertiesConnectionInfoReader;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -53,52 +52,35 @@ public class HibernateDefaultConnectionBaseBuilder
             cbi.setEnableJdbc4ConnectionTest(true);
         }
 
-        for (String prop : filteredProperties.stringPropertyNames())
-        {
-            switch (prop)
-            {
-                case "hibernate.connection.url":
-                {
-                    if (cbi.getUrl() == null)
-                    {
-                        cbi.setUrl(cbi.getJdbcUrl());
-                        //cbi.setUrl(filteredProperties.getProperty(prop));
-                    }
-                    break;
-                }
-                case "hibernate.connection.user":
-                {
-                    if (cbi.getUsername() == null)
-                    {
-                        cbi.setUsername(filteredProperties.getProperty(prop));
-                    }
-                    break;
-                }
-                case "hibernate.connection.driver_class":
-                {
-                    if (cbi.getDriverClass() == null)
-                    {
-                        cbi.setDriverClass(filteredProperties.getProperty(prop));
-                    }
-                    break;
-                }
-                default:
-                {
-                    break;
-                }
-            }
-        }
+        // Placeholders have already been resolved by SystemEnvironmentVariablesPropertiesReader.
+        // Copy those values into the connection settings without replacing application overrides.
+        if (cbi.getUrl() == null)
+            cbi.setUrl(first(filteredProperties, "jakarta.persistence.jdbc.url", "javax.persistence.jdbc.url", "hibernate.connection.url"));
+        if (cbi.getUsername() == null)
+            cbi.setUsername(first(filteredProperties, "jakarta.persistence.jdbc.user", "javax.persistence.jdbc.user", "hibernate.connection.username", "hibernate.connection.user"));
+        if (cbi.getPassword() == null)
+            cbi.setPassword(first(filteredProperties, "jakarta.persistence.jdbc.password", "javax.persistence.jdbc.password", "hibernate.connection.password"));
+        if (cbi.getDriverClass() == null)
+            cbi.setDriverClass(first(filteredProperties, "jakarta.persistence.jdbc.driver", "javax.persistence.jdbc.driver", "hibernate.connection.driver_class"));
 
         //process into properties
-        if (!Strings.isNullOrEmpty(cbi.getUsername()))
+        if (cbi.getUsername() != null)
         {
             filteredProperties.put("jakarta.persistence.jdbc.user", cbi.getUsername());
         }
-        if(!Strings.isNullOrEmpty(cbi.getPassword()))
+        if(cbi.getPassword() != null)
         {
             filteredProperties.put("jakarta.persistence.jdbc.password", cbi.getPassword());
         }
         return cbi;
+    }
+
+    private static String first(Properties properties, String... names) {
+        for (String name : names) {
+            String value = properties.getProperty(name);
+            if (value != null) return value;
+        }
+        return null;
     }
 
     @Override

@@ -12,8 +12,10 @@ import com.guicedee.persistence.implementations.systemproperties.SystemEnvironme
 import org.hibernate.service.spi.ServiceContributor;
 
 module com.guicedee.persistence {
+    requires java.xml;
     requires com.guicedee.jsonrepresentation;
     provides com.guicedee.client.services.lifecycle.IGuicePreStartup with com.guicedee.persistence.PersistenceShutdown;
+    provides com.guicedee.client.services.lifecycle.IGuicePostStartup with com.guicedee.persistence.PersistenceStartup;
     provides com.guicedee.client.services.lifecycle.IGuicePreDestroy with com.guicedee.persistence.PersistenceShutdown;
 
     exports com.guicedee.persistence;
@@ -52,6 +54,7 @@ module com.guicedee.persistence {
 
     uses com.guicedee.persistence.IPropertiesConnectionInfoReader;
     uses com.guicedee.persistence.IPropertiesEntityManagerReader;
+    uses org.hibernate.bytecode.spi.BytecodeProvider;
 
     provides IGuiceConfigurator with GuicedConfigurator;
     provides IPropertiesEntityManagerReader with SystemEnvironmentVariablesPropertiesReader, HibernateEntityManagerProperties,

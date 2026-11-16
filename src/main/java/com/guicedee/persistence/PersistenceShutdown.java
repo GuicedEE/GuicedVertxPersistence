@@ -20,6 +20,11 @@ public final class PersistenceShutdown implements IGuicePreStartup<PersistenceSh
         if (state.closing != null) throw new IllegalStateException("Persistence is stopping");
         state.services.add(Objects.requireNonNull(service));
     }
+    static synchronized List<io.smallrye.mutiny.Uni<Boolean>> startRegisteredServices() {
+        if (state.closing != null) throw new IllegalStateException("Persistence is stopping");
+        return state.services.stream().map(service -> io.smallrye.mutiny.Uni.createFrom()
+                .deferred(service::start).replaceWith(true)).toList();
+    }
     public static synchronized void registerOwnedPool(Map<?,?> properties) {
         Object candidate = properties.get(OWNED_POOL);
         if (candidate == null) return;
@@ -60,6 +65,9 @@ public final class PersistenceShutdown implements IGuicePreStartup<PersistenceSh
                 CompletableFuture.allOf(closes).get(10, TimeUnit.SECONDS);
             } catch (Throwable failed) { if (failure == null) failure = failed; }
             owned.services.clear();owned.pools.clear();
+            DatabaseModule.resetDescriptors();
+            com.guicedee.persistence.bind.JtaPersistModule.reset();
+            com.guicedee.persistence.implementations.VertxPersistenceModule.reset();
             if (failure == null) owned.closing.complete(null);
             else owned.closing.completeExceptionally(new IllegalStateException("Persistence shutdown failed"));
         });
